@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Environment variables
+.env
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Database (keep schema.sql, ignore generated DB)
+database/*.db
+database/*.sqlite
+database/*.sqlite3
+
+# User uploads
+data/uploads/*
+
+# ETL reports
+data/reports/*
+
+# Processed data
+data/processed/*
+
+# Python cache
+.pytest_cache/
+.mypy_cache/
+
+# Node (for future React frontend)
+node_modules/
+dist/
+build/
