@@ -65,6 +65,7 @@ def init_db(run_etl=True, etl_limit=None):
             # Import and run ETL
             backend_dir = os.path.join(base_dir, 'backend')
             sys.path.insert(0, backend_dir)
+            # pyrefly: ignore [missing-import]
             from etl_pipeline import run_etl_pipeline
             run_etl_pipeline(limit=etl_limit)
         else:

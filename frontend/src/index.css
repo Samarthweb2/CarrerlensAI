@@ -1,0 +1,433 @@
+@import "tailwindcss";
+
+@theme {
+  --color-cream: #FFF9ED;
+  --color-cream-dark: #FFF3D6;
+  --color-primary: #FFD54F;
+  --color-primary-dark: #FFC107;
+  --color-secondary: #7C5CFF;
+  --color-secondary-light: #9B85FF;
+  --color-accent-orange: #FF8A50;
+  --color-accent-green: #4CAF50;
+  --color-accent-green-light: #81C784;
+  --color-text: #1F1F1F;
+  --color-text-light: #6B7280;
+  --color-text-muted: #9CA3AF;
+  --color-card-bg: #FFFFFF;
+  --color-card-border: #F3E8D0;
+  --color-feature-bg: #FFF5E0;
+}
+
+:root {
+  scroll-behavior: smooth;
+  font-family: 'Nunito', 'Inter', sans-serif;
+}
+
+body {
+  background-color: #FFF9ED;
+  color: #1F1F1F;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── Selection Highlight ── */
+::selection {
+  background: #FFD54F;
+  color: #1F1F1F;
+}
+
+/* ── Playful Card Styles ── */
+.card-playful {
+  background: #FFFFFF;
+  border: 2px solid #F3E8D0;
+  border-radius: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04), 0 1px 4px rgba(0, 0, 0, 0.02);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card-playful:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+/* ── Feature Card — White, Soft, Playful ── */
+.feature-card {
+  background: #FFFFFF;
+  border: 2px solid #F3E8D0;
+  border-radius: 28px;
+  padding: 32px;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              box-shadow 0.4s ease,
+              border-color 0.3s ease;
+}
+
+.feature-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 28px;
+  background: radial-gradient(circle at 50% 0%, rgba(255, 213, 79, 0.06), transparent 70%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+
+.feature-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  border-color: rgba(255, 213, 79, 0.4);
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.06),
+    0 8px 20px rgba(0, 0, 0, 0.03),
+    0 0 0 1px rgba(255, 213, 79, 0.1);
+}
+
+.feature-card:hover::before {
+  opacity: 1;
+}
+
+/* ── Card illustration micro-animations ── */
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-3deg); }
+  75% { transform: rotate(3deg); }
+}
+
+@keyframes pulse-soft {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+}
+
+@keyframes grow-up {
+  0%, 100% { transform: scaleY(1); }
+  50% { transform: scaleY(1.04); }
+}
+
+@keyframes gentle-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+.illust-wiggle {
+  animation: wiggle 3s ease-in-out infinite;
+  transform-origin: center bottom;
+}
+
+.illust-pulse {
+  animation: pulse-soft 3s ease-in-out infinite;
+}
+
+.illust-grow {
+  animation: grow-up 2.5s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+
+.illust-bounce {
+  animation: gentle-bounce 2.8s ease-in-out infinite;
+}
+
+/* ── Speedometer and Gauge Animations ── */
+@keyframes needle-wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(20deg); }
+}
+
+.ats-gauge-needle {
+  animation: needle-wiggle 3s ease-in-out infinite;
+  transform-origin: 80px 60px;
+}
+
+@keyframes draw-arc {
+  0%, 100% { stroke-dashoffset: 55; }
+  50% { stroke-dashoffset: 20; }
+}
+
+.ats-gauge-arc {
+  animation: draw-arc 4s ease-in-out infinite;
+}
+
+/* ── Feature card arrow button ── */
+.feat-arrow-btn {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.feat-arrow-btn:hover {
+  transform: rotate(15deg) scale(1.1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.feat-arrow-btn .feat-arrow-icon {
+  transition: transform 0.3s ease;
+}
+
+.feat-arrow-btn:hover .feat-arrow-icon {
+  transform: translateX(2px);
+}
+
+/* ── Upload Box ── */
+.upload-box {
+  border: 3px dashed #D1C4A9;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04), 0 2px 8px rgba(0, 0, 0, 0.02);
+  transition: border-color 0.3s ease, background 0.3s ease, box-shadow 0.4s ease, transform 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.upload-box::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 26px;
+  background: transparent;
+  transition: background 0.4s ease;
+  z-index: -1;
+}
+
+.upload-box:hover {
+  border-color: #7C5CFF;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 
+    0 0 0 4px rgba(255, 213, 79, 0.12),
+    0 12px 40px rgba(255, 213, 79, 0.15),
+    0 4px 16px rgba(124, 92, 255, 0.06);
+}
+
+/* Animated dashed border via CSS animation */
+@keyframes dash-march {
+  to { stroke-dashoffset: -24; }
+}
+
+/* ── Yellow Button ── */
+.btn-yellow {
+  background: #FFD54F;
+  color: #1F1F1F;
+  font-weight: 700;
+  border-radius: 50px;
+  padding: 14px 32px;
+  border: 2px solid transparent;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  box-shadow: 0 4px 14px rgba(255, 213, 79, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-yellow:hover {
+  background: #FFC107;
+  transform: translateY(-3px);
+  box-shadow: 0 10px 28px rgba(255, 213, 79, 0.45), 0 4px 12px rgba(255, 193, 7, 0.2);
+}
+
+.btn-yellow:active {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 213, 79, 0.35);
+}
+
+/* Arrow slide on hover */
+.btn-yellow .btn-arrow {
+  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.btn-yellow:hover .btn-arrow {
+  transform: translateX(3px);
+}
+
+/* ── Outlined Button ── */
+.btn-outline {
+  background: transparent;
+  color: #1F1F1F;
+  font-weight: 700;
+  border-radius: 50px;
+  padding: 14px 32px;
+  border: 2px solid #E5E7EB;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.btn-outline:hover {
+  border-color: #7C5CFF;
+  color: #7C5CFF;
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(124, 92, 255, 0.15), 0 2px 8px rgba(124, 92, 255, 0.08);
+  background: rgba(124, 92, 255, 0.03);
+}
+
+.btn-outline:active {
+  transform: translateY(-1px);
+}
+
+/* Play icon rotate on hover */
+.btn-outline .btn-play {
+  transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.btn-outline:hover .btn-play {
+  transform: rotate(15deg) scale(1.1);
+}
+
+/* ── Navbar ── */
+.nav-sticky {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(243, 232, 208, 0.6);
+}
+
+/* ── Star Rating ── */
+.star-gold {
+  color: #FFD54F;
+  filter: drop-shadow(0 1px 2px rgba(255, 213, 79, 0.4));
+}
+
+/* ── Decorative Dot Pattern ── */
+.dot-pattern {
+  background-image: radial-gradient(circle, #E8D5B0 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* ── CTA Section ── */
+.cta-section {
+  background: linear-gradient(135deg, #FFF5E0 0%, #FFF9ED 50%, #F3EAFF 100%);
+  border-radius: 32px;
+  border: 2px solid #F3E8D0;
+}
+
+/* ── Robot Eye Blink Animation ── */
+@keyframes blink {
+  0%, 90%, 100% { transform: scaleY(1); }
+  95% { transform: scaleY(0.05); }
+}
+
+.robot-eye {
+  animation: blink 3.5s ease-in-out infinite;
+  transform-origin: center;
+}
+
+.robot-eye-delayed {
+  animation: blink 3.5s ease-in-out infinite 0.05s;
+  transform-origin: center;
+}
+
+/* ── Robot Breathing / Idle Animation ── */
+@keyframes breathe {
+  0%, 100% { transform: scaleY(1); }
+  50% { transform: scaleY(1.015); }
+}
+
+.robot-body-breathe {
+  animation: breathe 3s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+
+/* ── Upload Icon Pulse ── */
+@keyframes icon-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.08); opacity: 0.85; }
+}
+
+.upload-icon-pulse {
+  animation: icon-pulse 2.5s ease-in-out infinite;
+}
+
+/* ── Sparkle Twinkle ── */
+@keyframes twinkle {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.7); }
+}
+
+.sparkle-twinkle {
+  animation: twinkle 2.8s ease-in-out infinite;
+}
+
+.sparkle-twinkle-delayed {
+  animation: twinkle 3.2s ease-in-out infinite 0.8s;
+}
+
+.sparkle-twinkle-slow {
+  animation: twinkle 4s ease-in-out infinite 1.5s;
+}
+
+/* ── Avatar Hover ── */
+.avatar-item {
+  transition: transform 0.3s ease, box-shadow 0.3s ease, z-index 0s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.avatar-item:hover {
+  transform: translateY(-4px) scale(1.12);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+  z-index: 10 !important;
+}
+
+/* ── Speech Bubble ── */
+.speech-bubble {
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.06), 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+/* ── Scrollbar Styling ── */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #FFF9ED;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #D1C4A9;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #B8A88A;
+}
+
+/* ── Interactive Product Demo Machinery ── */
+@keyframes spin-gear {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.gear-spin-clockwise {
+  animation: spin-gear 4s linear infinite;
+  transform-origin: center;
+}
+
+.gear-spin-counter {
+  animation: spin-gear 4s linear infinite reverse;
+  transform-origin: center;
+}
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 8px 32px rgba(124, 92, 255, 0.08); border-color: #F3E8D0; }
+  50% { box-shadow: 0 12px 40px rgba(124, 92, 255, 0.25); border-color: rgba(124, 92, 255, 0.5); }
+}
+
+.demo-machine-glowing {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse-yellow {
+  0%, 100% { box-shadow: 0 0 0 0px rgba(255, 213, 79, 0.4); }
+  50% { box-shadow: 0 0 16px 8px rgba(255, 213, 79, 0.2); }
+}
+
+.demo-upload-glowing {
+  animation: pulse-yellow 1.8s ease-in-out infinite;
+  border-color: #FFD54F !important;
+}
+
+@keyframes bar-shine {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.progress-bar-shine {
+  background: linear-gradient(90deg, #7C5CFF, #FF8A50, #4CAF50, #7C5CFF);
+  background-size: 300% 300%;
+  animation: bar-shine 3s ease infinite;
+}

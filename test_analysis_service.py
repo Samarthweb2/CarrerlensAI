@@ -4,6 +4,7 @@ import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'backend'))
 
+# pyrefly: ignore [missing-import]
 from services.resume_analysis_service import (
     analyze_resume, get_skills_flat, get_skills_by_category
 )

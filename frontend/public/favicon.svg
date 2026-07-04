@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- Robot head background -->
+  <rect x="12" y="16" width="40" height="36" rx="12" fill="#7C5CFF"/>
+  <!-- Robot face plate -->
+  <rect x="16" y="20" width="32" height="28" rx="8" fill="white"/>
+  <!-- Left eye -->
+  <circle cx="25" cy="32" r="4" fill="#1F1F1F"/>
+  <circle cx="26.5" cy="30.5" r="1.5" fill="white"/>
+  <!-- Right eye -->
+  <circle cx="39" cy="32" r="4" fill="#1F1F1F"/>
+  <circle cx="40.5" cy="30.5" r="1.5" fill="white"/>
+  <!-- Smile -->
+  <path d="M26 40 Q32 46 38 40" stroke="#1F1F1F" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+  <!-- Antenna -->
+  <line x1="32" y1="16" x2="32" y2="8" stroke="#7C5CFF" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="32" cy="6" r="4" fill="#FFD54F"/>
+  <!-- Left ear -->
+  <rect x="6" y="28" width="8" height="12" rx="4" fill="#FFD54F"/>
+  <!-- Right ear -->
+  <rect x="50" y="28" width="8" height="12" rx="4" fill="#FFD54F"/>
+</svg>
