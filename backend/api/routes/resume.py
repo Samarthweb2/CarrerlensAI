@@ -1,21 +1,23 @@
-# pyrefly: ignore [missing-import]
-from fastapi import APIRouter, UploadFile, File, HTTPException, status
-# pyrefly: ignore [missing-import]
-from pydantic import BaseModel
-from typing import List, Optional, Dict, Any
 import os
-import tempfile
-import shutil
-import logging
 import uuid
+import logging
+from fastapi import APIRouter, UploadFile, File, HTTPException, status, Depends, Form
+from sqlalchemy.orm import Session
+from typing import List, Optional, Dict, Any
 from pathlib import Path
 
-# Import existing functions from backend
-from resume_parser import extract_text_from_pdf
-from services.resume_analysis_service import analyze_resume, get_skills_flat
-from matching_engine import save_candidate_profile, get_candidate_matches
+# DB imports
+from database.database import get_db
+from database.models import User, Resume, Analysis
+from api.middleware.auth import get_current_user
 
-# Set up logging
+# Parser & service imports
+from resume_parser import parse_resume_to_json, extract_text
+from services.ai_service import analyze_resume_text, compare_resumes
+from services.resume_service import save_uploaded_file, UPLOAD_DIR
+from schemas.resume import ResumeUploadResponse, LinksSchema
+from pydantic import BaseModel
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter(
@@ -23,199 +25,233 @@ router = APIRouter(
     tags=["Resume Analysis"]
 )
 
-class CandidateProfileResponse(BaseModel):
-    status: str
-    message: str
-
-@router.post("/parse", response_model=CandidateProfileResponse)
-async def parse_resume(file: UploadFile = File(...)):
+@router.post("/upload", response_model=ResumeUploadResponse)
+async def upload_resume(
+    file: UploadFile = File(...),
+    job_description: Optional[str] = Form(None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     """
-    Placeholder endpoint to upload and parse a resume.
+    Accepts a resume document upload (PDF/DOCX <= 5MB), saves it locally with a UUID prefix,
+    extracts plain text and sections, triggers a dynamic AI scoring, saves Resume/Analysis to the
+    database, and yields parsing structured JSON.
     """
-    return {
-        "status": "success",
-        "message": f"Resume '{file.filename}' received. Parsing logic placeholder."
-    }
-
-# Pydantic schemas for the structured candidate profile response
-class ContactInfo(BaseModel):
-    first_name: str
-    last_name: str
-    full_name: str
-    email: Optional[str] = None
-    phone: Optional[str] = None
-    linkedin: Optional[str] = None
-    github: Optional[str] = None
-    portfolio: Optional[str] = None
-
-class SkillItem(BaseModel):
-    name: str
-    category: str
-
-class EducationItem(BaseModel):
-    degree: str
-    level: Optional[str] = None
-    institution: Optional[str] = None
-    year: Optional[str] = None
-    graduation_year: Optional[int] = None
-    gpa: Optional[str] = None
-
-class ExperienceItem(BaseModel):
-    role: str
-    company: Optional[str] = None
-    duration: Optional[str] = None
-    start_date: Optional[str] = None
-    end_date: Optional[str] = None
-    is_current: bool
-    responsibilities: List[str] = []
-
-class ProjectItem(BaseModel):
-    name: str
-    description: Optional[str] = None
-    technologies: List[str] = []
-
-class CertificationItem(BaseModel):
-    name: str
-    issuer: Optional[str] = None
-    year: Optional[int] = None
-
-class MetadataInfo(BaseModel):
-    source_filename: str
-    parsed_at: str
-    raw_text_length: int
-    sections_detected: List[str] = []
-
-class ResumeAnalysisResponse(BaseModel):
-    contact: ContactInfo
-    summary: Optional[str] = None
-    skills: List[SkillItem] = []
-    education: List[EducationItem] = []
-    experience: List[ExperienceItem] = []
-    projects: List[ProjectItem] = []
-    certifications: List[CertificationItem] = []
-    metadata: MetadataInfo
-
-class JobMatchItem(BaseModel):
-    candidate_name: str
-    job_title: str
-    company_name: str
-    salary: Optional[int] = None
-    experience_level: Optional[str] = None
-    location: Optional[str] = None
-    matching_skills_count: int
-    total_skills_required: int
-    match_percentage: float
-
-class AnalyzeResumeResponse(BaseModel):
-    candidate_profile: ResumeAnalysisResponse
-    job_matches: List[JobMatchItem] = []
-
-@router.post("/analyze", response_model=AnalyzeResumeResponse)
-async def analyze_resume_endpoint(file: UploadFile = File(...)):
-    """
-    Accepts a PDF resume upload, extracts text, analyzes it, saves the candidate profile and 
-    skills to the database, queries matching job roles, and returns the profile combined with matches.
-    """
-    # 1. Accept a PDF resume upload using UploadFile.
-    # Validate PDF content type / file extension
-    filename = file.filename or "resume.pdf"
-    if not filename.lower().endswith(".pdf"):
-        logger.error(f"Upload failed: File '{filename}' is not a PDF.")
+    # 1. Validation size check: 5MB
+    max_size = 5 * 1024 * 1024
+    # Read file size by seeking
+    file.file.seek(0, os.SEEK_END)
+    file_size = file.file.tell()
+    file.file.seek(0) # reset pointer
+    
+    if file_size > max_size:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid file format. Only PDF files are allowed."
+            detail="Oops! This file is too large. Please upload a resume under 5 MB."
         )
 
-    # 2. Save the uploaded file temporarily.
-    suffix = Path(filename).suffix or ".pdf"
-    temp_path = None
+    # 2. File suffix validation check
+    filename = file.filename or "resume.pdf"
+    file_ext = os.path.splitext(filename)[1].lower()
+    if file_ext not in {".pdf", ".docx", ".doc"}:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Oops! Looks like this isn't a resume. Please upload a PDF or DOCX file."
+        )
+
+    # 3. Store unique filename with UUID prefix to prevent collisions
+    unique_filename = f"{uuid.uuid4()}_{filename}"
+    file_path = os.path.join(UPLOAD_DIR, unique_filename)
+    
     try:
-        # Create a named temporary file that persists after closing
-        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as temp_file:
-            shutil.copyfileobj(file.file, temp_file)
-            temp_path = temp_file.name
+        with open(file_path, "wb") as buffer:
+            buffer.write(file.file.read())
+    except Exception as e:
+        logger.error(f"Failed to save upload locally: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to save uploaded file on server."
+        )
+
+    # 4. Save Resume record in database
+    db_resume = Resume(
+        user_id=current_user.id,
+        filename=filename,
+        filepath=file_path
+    )
+    db.add(db_resume)
+    db.commit()
+    db.refresh(db_resume)
+
+    # 5. Extract text and parse section chunks
+    try:
+        parsed_data = parse_resume_to_json(file_path, filename)
+    except Exception as e:
+        logger.error(f"Parsing failed for {filename}: {e}")
+        # Cleanup
+        if os.path.exists(file_path):
+            os.remove(file_path)
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Failed to extract text or parse the uploaded resume document structure."
+        )
+
+    # 6. Perform dynamic scoring and recommendations via AI analyzer
+    try:
+        analysis_data = analyze_resume_text(parsed_data, job_description)
+    except Exception as e:
+        logger.error(f"AI analysis calculation failed: {e}")
+        # Cleanup
+        if os.path.exists(file_path):
+            os.remove(file_path)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to process resume analysis calculations."
+        )
+
+    # 7. Save Analysis record in database
+    db_analysis = Analysis(
+        resume_id=db_resume.id,
+        user_id=current_user.id,
+        ats_score=analysis_data["atsScore"],
+        resume_score=analysis_data["resumeScore"],
+        formatting=analysis_data["formatting"],
+        grammar=analysis_data["grammar"],
+        keywords=analysis_data["keywords"],
+        skills_found=analysis_data["skillsFound"],
+        missing_skills=analysis_data["missingSkills"],
+        suggestions=analysis_data["suggestions"],
+        section_scores=analysis_data["sectionScores"],
+        keyword_match=analysis_data["keywordMatch"],
+        roadmap=analysis_data["roadmap"],
+        job_matches=analysis_data["jobMatches"],
+        job_description=job_description,
+        improvements=analysis_data.get("improvements", []),
+        interview_questions=analysis_data.get("interviewQuestions", [])
+    )
+    
+    db.add(db_analysis)
+    db.commit()
+    db.refresh(db_analysis)
+
+    # 8. Return response
+    links_payload = parsed_data.get("links", {})
+    return {
+        "fileId": db_resume.id,
+        "fileName": filename,
+        "text": parsed_data["text"],
+        "education": parsed_data["education"],
+        "experience": parsed_data["experience"],
+        "projects": parsed_data["projects"],
+        "skills": parsed_data["skills"],
+        "certifications": parsed_data["certifications"],
+        "links": LinksSchema(
+            github=links_payload.get("github"),
+            linkedin=links_payload.get("linkedin")
+        ),
+        "analysisId": db_analysis.id
+    }
+
+@router.get("/{id}")
+async def get_resume(
+    id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Fetches file details for a saved resume.
+    """
+    resume = db.query(Resume).filter(Resume.id == id, Resume.user_id == current_user.id).first()
+    if not resume:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Resume file record not found."
+        )
+    return {
+        "id": resume.id,
+        "filename": resume.filename,
+        "uploaded_at": resume.uploaded_at
+    }
+
+@router.delete("/{id}", status_code=status.HTTP_200_OK)
+async def delete_resume(
+    id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Deletes the saved resume document, the associated database record, and cascade deletes the analyses.
+    """
+    resume = db.query(Resume).filter(Resume.id == id, Resume.user_id == current_user.id).first()
+    if not resume:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Resume file record not found."
+        )
         
-        logger.info(f"Successfully uploaded and temporarily saved '{filename}' to '{temp_path}'.")
-    except Exception as e:
-        logger.error(f"Failed to save uploaded file '{filename}' temporarily: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to save uploaded file temporarily."
-        )
+    # Delete file from local uploads directory
+    if os.path.exists(resume.filepath):
+        try:
+            os.remove(resume.filepath)
+        except Exception as e:
+            logger.warning(f"Could not remove local file {resume.filepath}: {e}")
 
-    # 3. Use the existing resume_parser.py to extract the resume content.
-    # 4. Pass the parsed output to resume_analysis_service.py.
-    # 7. Delete the temporary uploaded file after processing.
+    db.delete(resume)
+    db.commit()
+    return {"status": "success", "message": "Resume document deleted successfully."}
+
+class CompareRequest(BaseModel):
+    resumeId1: int
+    resumeId2: int
+
+@router.get("", response_model=List[Dict[str, Any]])
+async def list_resumes(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Lists all resumes uploaded by the current user with basic analysis scores.
+    """
+    resumes = db.query(Resume).filter(Resume.user_id == current_user.id).all()
+    results = []
+    for r in resumes:
+        analysis = db.query(Analysis).filter(Analysis.resume_id == r.id).first()
+        results.append({
+            "id": r.id,
+            "filename": r.filename,
+            "uploaded_at": r.uploaded_at.strftime("%B %d, %Y") if r.uploaded_at else "Unknown",
+            "analysisId": analysis.id if analysis else None,
+            "atsScore": analysis.ats_score if analysis else None
+        })
+    return results
+
+@router.post("/compare")
+async def compare_resumes_api(
+    payload: CompareRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Compares two resumes of the user to highlight changes, improved skills, and ATS differences.
+    """
+    res1 = db.query(Resume).filter(Resume.id == payload.resumeId1, Resume.user_id == current_user.id).first()
+    res2 = db.query(Resume).filter(Resume.id == payload.resumeId2, Resume.user_id == current_user.id).first()
+    
+    if not res1 or not res2:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="One or both of the specified resumes could not be found."
+        )
+        
     try:
-        raw_text = extract_text_from_pdf(temp_path)
-        if not raw_text:
-            logger.error(f"Text extraction failed or empty result for resume '{filename}'.")
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail="Could not extract text from the PDF resume. Make sure it contains readable text."
-            )
-
-        # Pass parsed output to resume_analysis_service.py
-        profile = analyze_resume(raw_text, filename=filename)
-        logger.info(f"Successfully parsed and analyzed resume '{filename}'.")
-
-        # Extract contact and skills info for database matching integration
-        contact = profile.get("contact", {})
-        first_name = contact.get("first_name") or "Unknown"
-        last_name = contact.get("last_name") or "Candidate"
-        email = contact.get("email")
-        phone = contact.get("phone")
-        skills_flat = get_skills_flat(profile)
-
-        # Generate a unique fallback email if none was parsed to satisfy SQLite's NOT NULL constraint
-        if not email:
-            email = f"unknown_{uuid.uuid4().hex[:10]}@email.com"
-            logger.info(f"No email parsed from resume '{filename}'. Generated fallback: {email}")
-
-        # Save profile to the SQLite database via matching_engine.py
-        candidate_id = save_candidate_profile(
-            first_name=first_name,
-            last_name=last_name,
-            email=email,
-            phone=phone,
-            resume_path=temp_path or filename,
-            skills_list=skills_flat
-        )
-
-        if candidate_id is None:
-            logger.error(f"Failed to save candidate profile for resume '{filename}' to database.")
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to save candidate profile to matching database."
-            )
-
-        logger.info(f"Saved candidate profile (ID: {candidate_id}) to database. Retrieving matches...")
-
-        # Retrieve candidate matches using the database matching engine
-        job_matches = get_candidate_matches(candidate_id=candidate_id)
-        logger.info(f"Retrieved {len(job_matches)} job matches for candidate ID {candidate_id}.")
-
-        return {
-            "candidate_profile": profile,
-            "job_matches": job_matches
-        }
-
-    except HTTPException as he:
-        # Pass HTTPExceptions straight through
-        raise he
+        text1 = extract_text(res1.filepath)
+        text2 = extract_text(res2.filepath)
+        
+        comparison = compare_resumes(text1, text2, res1.filename, res2.filename)
+        return comparison
     except Exception as e:
-        logger.error(f"Error during processing of resume '{filename}': {str(e)}", exc_info=True)
+        logger.error(f"Error during resume comparison: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"An error occurred while analyzing the resume: {str(e)}"
+            detail=f"Resume comparison failed: {str(e)}"
         )
-    finally:
-        # Cleanup the temporary file
-        if temp_path and os.path.exists(temp_path):
-            try:
-                os.remove(temp_path)
-                logger.info(f"Successfully deleted temporary file '{temp_path}'.")
-            except Exception as cleanup_err:
-                logger.warning(f"Failed to delete temporary file '{temp_path}': {str(cleanup_err)}")
-
-

@@ -16,84 +16,119 @@ import {
   Play,
   ChevronRight,
   Sparkles,
-  Rocket
+  Rocket,
+  Bell,
+  Settings
 } from 'lucide-react';
+
+// Authentication Experience Component Imports
+import AuthLayout from './components/auth/AuthLayout';
+import Login from './components/auth/Login';
+import Signup from './components/auth/Signup';
+import ForgotPassword from './components/auth/ForgotPassword';
+import VerifyEmail from './components/auth/VerifyEmail';
+import UploadLayout from './components/upload/UploadLayout';
+import Dashboard from './pages/Dashboard';
 
 /* ═══════════════════════════════════════════════════
    INLINE SVG COMPONENTS — Cartoon Illustrations
    ═══════════════════════════════════════════════════ */
 
 // Cute AI Robot Mascot — Now with CSS animation classes for blink + breathe
+// Cute AI Robot Mascot Sitting at Laptop — Telling a Resume Scan Story
 const RobotMascot = ({ className = '' }) => (
-  <svg viewBox="0 0 280 320" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
-    {/* Antenna */}
-    <line x1="140" y1="50" x2="140" y2="20" stroke="#7C5CFF" strokeWidth="4" strokeLinecap="round"/>
-    <circle cx="140" cy="14" r="10" fill="#FFD54F" stroke="#E6BE3D" strokeWidth="2"/>
-    <circle cx="140" cy="14" r="4" fill="#FFF9ED"/>
+  <svg viewBox="0 0 320 300" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    {/* Table Top */}
+    <line x1="20" y1="260" x2="300" y2="260" stroke="#1F1F1F" strokeWidth="4" strokeLinecap="round" />
+    <path d="M 60 260 L 50 295 M 260 260 L 270 295" stroke="#1F1F1F" strokeWidth="3.5" strokeLinecap="round" />
+    
+    {/* Laptop base and screen */}
+    <rect x="145" y="248" width="60" height="12" rx="3" fill="#E5E7EB" stroke="#1F1F1F" strokeWidth="2.5" />
+    <path d="M 155 248 L 150 220 L 200 220 L 195 248 Z" fill="white" stroke="#1F1F1F" strokeWidth="2.5" strokeLinejoin="round" />
+    {/* Glowing laptop screen content */}
+    <rect x="156" y="224" width="38" height="20" rx="2" fill="#7C5CFF" opacity="0.15" />
+    <line x1="162" y1="230" x2="188" y2="230" stroke="#7C5CFF" strokeWidth="2" strokeLinecap="round" />
+    <line x1="162" y1="236" x2="182" y2="236" stroke="#7C5CFF" strokeWidth="2" strokeLinecap="round" />
 
-    {/* Body shadow */}
-    <ellipse cx="140" cy="295" rx="80" ry="12" fill="#E8D5B0" opacity="0.5"/>
-
-    {/* Robot Body — wrapped in breathing group */}
-    <g className="robot-body-breathe">
-      <rect x="80" y="170" width="120" height="110" rx="24" fill="#7C5CFF"/>
-      <rect x="90" y="180" width="100" height="90" rx="16" fill="#9B85FF" opacity="0.4"/>
-
-      {/* Belly circle */}
-      <circle cx="140" cy="225" r="20" fill="white" opacity="0.3"/>
-      <circle cx="140" cy="225" r="12" fill="#FFD54F"/>
+    {/* Floating Holographic Dashboard Behind */}
+    <g opacity="0.95" className="floating-bubble-slow">
+      <rect x="175" y="25" width="130" height="95" rx="14" fill="white" stroke="#1F1F1F" strokeWidth="2.5" />
+      {/* Mini ATS Gauge circle */}
+      <circle cx="215" cy="70" r="20" fill="#FFFDF9" stroke="#1F1F1F" strokeWidth="2" />
+      <circle cx="215" cy="70" r="20" fill="none" stroke="#22C55E" strokeWidth="4" strokeDasharray="125" strokeDashoffset="30" strokeLinecap="round" />
+      <text x="215" y="74" textAnchor="middle" fontSize="10" fontWeight="900" fill="#1F1F1F">92%</text>
+      
+      {/* Stat lines and mini bar charts */}
+      <rect x="246" y="45" width="44" height="6" rx="2" fill="#FFD54F" stroke="#1F1F1F" strokeWidth="1.5" />
+      <rect x="246" y="61" width="36" height="6" rx="2" fill="#7C5CFF" stroke="#1F1F1F" strokeWidth="1.5" />
+      <rect x="246" y="77" width="40" height="6" rx="2" fill="#FF8A50" stroke="#1F1F1F" strokeWidth="1.5" />
     </g>
 
-    {/* Robot Head */}
-    <rect x="60" y="50" width="160" height="130" rx="32" fill="#7C5CFF"/>
-    <rect x="70" y="58" width="140" height="114" rx="26" fill="white"/>
+    {/* Connecting light rays from laptop to hologram */}
+    <path d="M 175 220 L 195 125 M 190 220 L 265 125" stroke="#7C5CFF" strokeWidth="1.5" strokeDasharray="3 3" opacity="0.4" />
 
-    {/* Left Eye — with blink */}
-    <g className="robot-eye">
-      <circle cx="110" cy="105" r="18" fill="#1F1F1F"/>
-      <circle cx="116" cy="98" r="6" fill="white"/>
-      <circle cx="112" cy="102" r="3" fill="white" opacity="0.6"/>
-    </g>
+    {/* Star Sparkles */}
+    <path d="M 20 60 L 22 63 L 25 64 L 22 65 L 20 68 L 18 65 L 15 64 L 18 63 Z" fill="#FFD54F" stroke="#E6BE3D" strokeWidth="1" />
+    <path d="M 20 220 L 22 223 L 25 224 L 22 225 L 20 228 L 18 225 L 15 224 L 18 223 Z" fill="#FF8A50" stroke="#E67E22" strokeWidth="1" />
 
-    {/* Right Eye — with blink (slightly delayed) */}
-    <g className="robot-eye-delayed">
-      <circle cx="170" cy="105" r="18" fill="#1F1F1F"/>
-      <circle cx="176" cy="98" r="6" fill="white"/>
-      <circle cx="172" cy="102" r="3" fill="white" opacity="0.6"/>
-    </g>
+    {/* Robot Mascot Sitting */}
+    <g className="robot-body-breathe" transform="translate(60, 95)">
+      {/* Body shadow on table */}
+      <ellipse cx="60" cy="158" rx="35" ry="5" fill="#E8D5B0" opacity="0.4" />
 
-    {/* Cute blush cheeks */}
-    <ellipse cx="85" cy="125" rx="12" ry="8" fill="#FFB4B4" opacity="0.5"/>
-    <ellipse cx="195" cy="125" rx="12" ry="8" fill="#FFB4B4" opacity="0.5"/>
+      {/* Torso */}
+      <rect x="30" y="85" width="60" height="58" rx="14" fill="#7C5CFF" stroke="#1F1F1F" strokeWidth="2.5" />
+      <rect x="38" y="93" width="44" height="40" rx="8" fill="#FFF9ED" opacity="0.3" />
 
-    {/* Smile */}
-    <path d="M115 135 Q140 155 165 135" stroke="#1F1F1F" strokeWidth="4" strokeLinecap="round" fill="none"/>
+      {/* Head with breathing and head-tilt */}
+      <g>
+        {/* Antenna */}
+        <line x1="60" y1="28" x2="60" y2="15" stroke="#7C5CFF" strokeWidth="3.5" strokeLinecap="round" />
+        <circle cx="60" cy="10" r="5" fill="#FFD54F" stroke="#1F1F1F" strokeWidth="2" />
 
-    {/* Ears */}
-    <rect x="40" y="85" width="24" height="40" rx="12" fill="#FFD54F" stroke="#E6BE3D" strokeWidth="2"/>
-    <rect x="216" y="85" width="24" height="40" rx="12" fill="#FFD54F" stroke="#E6BE3D" strokeWidth="2"/>
+        {/* Head Box */}
+        <rect x="15" y="28" width="90" height="66" rx="16" fill="#7C5CFF" stroke="#1F1F1F" strokeWidth="2.5" />
+        <rect x="21" y="34" width="78" height="54" rx="12" fill="white" />
 
-    {/* Arms */}
-    <rect x="42" y="190" width="38" height="16" rx="8" fill="#7C5CFF"/>
-    <circle cx="42" cy="198" r="12" fill="#FFD54F" stroke="#E6BE3D" strokeWidth="2"/>
-    <rect x="200" y="190" width="38" height="16" rx="8" fill="#7C5CFF"/>
-    <circle cx="238" cy="198" r="12" fill="#FFD54F" stroke="#E6BE3D" strokeWidth="2"/>
+        {/* Eyes (blinking) */}
+        <g className="robot-eye">
+          <circle cx="43" cy="56" r="8" fill="#1F1F1F" />
+          <circle cx="46" cy="52" r="2.5" fill="white" />
+        </g>
+        <g className="robot-eye-delayed">
+          <circle cx="77" cy="56" r="8" fill="#1F1F1F" />
+          <circle cx="80" cy="52" r="2.5" fill="white" />
+        </g>
 
-    {/* Legs */}
-    <rect x="105" y="275" width="24" height="20" rx="8" fill="#7C5CFF"/>
-    <rect x="151" y="275" width="24" height="20" rx="8" fill="#7C5CFF"/>
-    <rect x="100" y="288" width="34" height="14" rx="7" fill="#FFD54F"/>
-    <rect x="146" y="288" width="34" height="14" rx="7" fill="#FFD54F"/>
+        {/* Blush & Smile */}
+        <ellipse cx="29" cy="66" rx="5" ry="3" fill="#FFB4B4" opacity="0.5" />
+        <ellipse cx="91" cy="66" rx="5" ry="3" fill="#FFB4B4" opacity="0.5" />
+        <path d="M 48 68 Q 60 76 72 68" stroke="#1F1F1F" strokeWidth="3" strokeLinecap="round" fill="none" />
+        
+        {/* Ears */}
+        <rect x="1" y="44" width="14" height="24" rx="6" fill="#FFD54F" stroke="#1F1F1F" strokeWidth="2" />
+        <rect x="105" y="44" width="14" height="24" rx="6" fill="#FFD54F" stroke="#1F1F1F" strokeWidth="2" />
+      </g>
 
-    {/* Resume the robot is holding (right hand) */}
-    <g transform="rotate(-8, 248, 180)">
-      <rect x="230" y="155" width="50" height="65" rx="6" fill="white" stroke="#E5E7EB" strokeWidth="2"/>
-      <line x1="240" y1="170" x2="270" y2="170" stroke="#D1D5DB" strokeWidth="2" strokeLinecap="round"/>
-      <line x1="240" y1="178" x2="265" y2="178" stroke="#D1D5DB" strokeWidth="2" strokeLinecap="round"/>
-      <line x1="240" y1="186" x2="260" y2="186" stroke="#D1D5DB" strokeWidth="2" strokeLinecap="round"/>
-      <line x1="240" y1="194" x2="268" y2="194" stroke="#D1D5DB" strokeWidth="2" strokeLinecap="round"/>
-      <circle cx="255" cy="207" r="6" fill="#4CAF50" opacity="0.3"/>
-      <path d="M252 207 l3 3 l5 -5" stroke="#4CAF50" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      {/* Left Hand: Typing on laptop */}
+      <path d="M 30 115 Q 55 110 88 135" stroke="#7C5CFF" strokeWidth="7.5" strokeLinecap="round" />
+      <circle cx="88" cy="135" r="5.5" fill="#FFD54F" stroke="#1F1F1F" strokeWidth="2" />
+
+      {/* Right Hand: Analyzing & holding resume */}
+      <path d="M 90 110 Q 115 102 120 112" stroke="#7C5CFF" strokeWidth="7.5" strokeLinecap="round" />
+      <circle cx="120" cy="112" r="5.5" fill="#FFD54F" stroke="#1F1F1F" strokeWidth="2" />
+
+      {/* Resume Document held in hand */}
+      <g transform="translate(112, 60) rotate(14)">
+        <rect width="32" height="44" rx="4" fill="white" stroke="#1F1F1F" strokeWidth="2" />
+        <line x1="6" y1="10" x2="26" y2="10" stroke="#E5E7EB" strokeWidth="2" />
+        <line x1="6" y1="18" x2="22" y2="18" stroke="#E5E7EB" strokeWidth="2" />
+        <line x1="6" y1="26" x2="26" y2="26" stroke="#7C5CFF" strokeWidth="2" />
+      </g>
+
+      {/* Legs */}
+      <rect x="42" y="143" width="10" height="12" rx="3" fill="#FFD54F" stroke="#1F1F1F" strokeWidth="2" />
+      <rect x="68" y="143" width="10" height="12" rx="3" fill="#FFD54F" stroke="#1F1F1F" strokeWidth="2" />
     </g>
   </svg>
 );
@@ -666,6 +701,170 @@ const ThumbsUpRobot = ({ className = '' }) => (
   </svg>
 );
 
+// Dynamic Mascot for interactive demo that reacts to steps
+const InteractiveDemoRobot = ({ step }) => {
+  const isScanning = step === 'scanning';
+  const isProcessing = step === 'processing';
+  const isResults = step === 'results';
+
+  // Arms position
+  let leftArmD = "M 30 100 Q 15 110 20 125";
+  let rightArmD = "M 110 100 Q 125 110 120 125";
+  
+  if (isScanning) {
+    leftArmD = "M 30 100 Q 0 85 10 70"; // reaches out to catch the resume
+  } else if (isResults) {
+    leftArmD = "M 30 100 Q 10 70 20 55"; // celebrating
+    rightArmD = "M 110 100 Q 130 70 120 55";
+  }
+
+  // Mouth path
+  let mouthPath = "M 55 78 Q 70 88 85 78";
+  if (isProcessing) {
+    mouthPath = "M 60 82 H 80";
+  } else if (isResults) {
+    mouthPath = "M 52 75 Q 70 95 88 75 Z";
+  }
+
+  return (
+    <svg viewBox="0 0 140 180" fill="none" className="w-32 h-40 select-none">
+      {/* Shadow */}
+      <ellipse cx="70" cy="165" rx="35" ry="6" fill="#E8D5B0" opacity="0.4"/>
+      
+      {/* Left Arm */}
+      <motion.path
+        d={leftArmD}
+        stroke="#7C5CFF"
+        strokeWidth="7"
+        strokeLinecap="round"
+        animate={isResults ? { y: [0, -5, 0] } : {}}
+        transition={{ repeat: Infinity, duration: 0.6 }}
+      />
+      {/* Right Arm */}
+      <motion.path
+        d={rightArmD}
+        stroke="#7C5CFF"
+        strokeWidth="7"
+        strokeLinecap="round"
+        animate={isResults ? { y: [0, -5, 0] } : {}}
+        transition={{ repeat: Infinity, duration: 0.6, delay: 0.1 }}
+      />
+
+      {/* Head */}
+      <motion.g
+        animate={isProcessing ? { y: [0, -2, 0], rotate: [-1.1, 1.1, -1.1] } : { y: [0, -3, 0] }}
+        transition={{ repeat: Infinity, duration: isProcessing ? 1.4 : 3, ease: "easeInOut" }}
+        style={{ transformOrigin: "70px 105px" }}
+      >
+        {/* Antenna */}
+        <line x1="70" y1="28" x2="70" y2="15" stroke="#7C5CFF" strokeWidth="3" strokeLinecap="round"/>
+        <circle cx="70" cy="11" r="4" fill="#FFD54F"/>
+        {/* Ears */}
+        <rect x="18" y="44" width="10" height="15" rx="4" fill="#FFD54F"/>
+        <rect x="112" y="44" width="10" height="15" rx="4" fill="#FFD54F"/>
+        
+        {/* Head Shape */}
+        <rect x="25" y="28" width="90" height="75" rx="18" fill="#7C5CFF" stroke="#5b3fc4" strokeWidth="1"/>
+        <rect x="31" y="34" width="78" height="63" rx="14" fill="white"/>
+
+        {/* Eyes */}
+        {isResults ? (
+          <>
+            <path d="M 45 60 Q 55 50 65 60" stroke="#1F1F1F" strokeWidth="4.5" strokeLinecap="round" fill="none"/>
+            <path d="M 75 60 Q 85 50 95 60" stroke="#1F1F1F" strokeWidth="4.5" strokeLinecap="round" fill="none"/>
+          </>
+        ) : (
+          <>
+            <g className="robot-eye">
+              <circle cx="53" cy="58" r="7" fill="#1F1F1F"/>
+              <circle cx="55.5" cy="55.5" r="2.5" fill="white"/>
+            </g>
+            <g className="robot-eye-delayed">
+              <circle cx="87" cy="58" r="7" fill="#1F1F1F"/>
+              <circle cx="89.5" cy="55.5" r="2.5" fill="white"/>
+            </g>
+          </>
+        )}
+
+        {/* Blush */}
+        <ellipse cx="43" cy="72" rx="6" ry="3.5" fill="#FFB4B4" opacity="0.6"/>
+        <ellipse cx="97" cy="72" rx="6" ry="3.5" fill="#FFB4B4" opacity="0.6"/>
+
+        {/* Mouth */}
+        <path d={mouthPath} fill={isResults ? "#FF8A50" : "none"} stroke="#1F1F1F" strokeWidth="3" strokeLinecap="round"/>
+      </motion.g>
+
+      {/* Torso */}
+      <rect x="42" y="103" width="56" height="42" rx="10" fill="#7C5CFF" stroke="#5b3fc4" strokeWidth="1"/>
+      <rect x="50" y="111" width="40" height="26" rx="6" fill="#F9F5EB"/>
+      
+      {/* Indicator Light */}
+      <circle cx="70" cy="124" r="5" fill={isProcessing ? "#4CAF50" : isResults ? "#FFD54F" : "#FF8A50"} className={isProcessing ? "sparkle-twinkle" : ""}/>
+
+      {/* Legs */}
+      <rect x="50" y="145" width="10" height="20" rx="3" fill="#FFD54F"/>
+      <rect x="80" y="145" width="10" height="20" rx="3" fill="#FFD54F"/>
+    </svg>
+  );
+};
+
+// Robot mascot pointing right for Bottom CTA
+const PointingRobot = ({ className = '' }) => (
+  <svg viewBox="0 0 160 160" fill="none" className={className} xmlns="http://www.w3.org/2000/svg">
+    {/* Shadow */}
+    <ellipse cx="80" cy="145" rx="40" ry="6" fill="#E8D5B0" opacity="0.4"/>
+    
+    {/* Body Legs */}
+    <rect x="62" y="125" width="10" height="15" rx="2" fill="#FFD54F"/>
+    <rect x="88" y="125" width="10" height="15" rx="2" fill="#FFD54F"/>
+    
+    {/* Torso */}
+    <rect x="50" y="85" width="60" height="45" rx="12" fill="#7C5CFF" stroke="#5b3fc4" strokeWidth="1"/>
+    <rect x="58" y="93" width="44" height="29" rx="6" fill="#F9F5EB"/>
+    <circle cx="80" cy="107" r="5" fill="#4CAF50" className="sparkle-twinkle"/>
+
+    {/* Left Arm at rest */}
+    <path d="M 46 95 Q 35 115 42 125" stroke="#7C5CFF" strokeWidth="6" strokeLinecap="round"/>
+
+    {/* Right Arm POINTING to the right */}
+    <path d="M 112 95 Q 135 90 148 95" stroke="#7C5CFF" strokeWidth="6.5" strokeLinecap="round"/>
+    <path d="M 148 95 H 158" stroke="#FFD54F" strokeWidth="5.5" strokeLinecap="round"/>
+    <circle cx="148" cy="95" r="5" fill="#FFD54F"/>
+
+    {/* Head (sitting slightly tilted) */}
+    <motion.g
+      animate={{ y: [0, -3, 0], rotate: [-2, 2, -2] }}
+      transition={{ repeat: Infinity, duration: 2.8, ease: "easeInOut" }}
+      style={{ transformOrigin: "80px 85px" }}
+    >
+      {/* Antenna */}
+      <line x1="80" y1="25" x2="80" y2="12" stroke="#7C5CFF" strokeWidth="3" strokeLinecap="round"/>
+      <circle cx="80" cy="8" r="4" fill="#FFD54F"/>
+      
+      {/* Head Box */}
+      <rect x="35" y="25" width="90" height="64" rx="16" fill="#7C5CFF" stroke="#5b3fc4" strokeWidth="1"/>
+      <rect x="41" y="31" width="78" height="52" rx="12" fill="white"/>
+
+      {/* Eyes */}
+      <g className="robot-eye">
+        <circle cx="63" cy="52" r="6" fill="#1F1F1F"/>
+        <circle cx="65.5" cy="49.5" r="2.2" fill="white"/>
+      </g>
+      <g className="robot-eye-delayed">
+        <circle cx="97" cy="52" r="6" fill="#1F1F1F"/>
+        <circle cx="99.5" cy="49.5" r="2.2" fill="white"/>
+      </g>
+
+      {/* Smile */}
+      <path d="M 68 68 Q 80 76 92 68" stroke="#1F1F1F" strokeWidth="3" strokeLinecap="round" fill="none"/>
+      
+      {/* Blush */}
+      <ellipse cx="51" cy="62" rx="5" ry="3" fill="#FFB4B4" opacity="0.6"/>
+      <ellipse cx="109" cy="62" rx="5" ry="3" fill="#FFB4B4" opacity="0.6"/>
+    </motion.g>
+  </svg>
+);
+
 
 /* ═══════════════════════════════════════════════════
    MAIN APP COMPONENT
@@ -683,6 +882,50 @@ export default function App() {
   const [demoMessage, setDemoMessage] = useState('');
   const [isDemoDragOver, setIsDemoDragOver] = useState(false);
 
+  // FAQ Accordion State Hook
+  const [openFaqIndex, setOpenFaqIndex] = useState(null);
+
+  // Custom Navigation Router State Hooks
+  const [currentPath, setCurrentPath] = useState(window.location.pathname);
+  const [activeField, setActiveField] = useState(null);
+  const [authStatus, setAuthStatus] = useState('idle'); // 'idle' | 'success' | 'error' | 'forgot' | 'verify'
+
+  useEffect(() => {
+    const handleLocationChange = () => {
+      setCurrentPath(window.location.pathname);
+      // Reset animations state
+      setActiveField(null);
+      setAuthStatus('idle');
+    };
+    window.addEventListener('popstate', handleLocationChange);
+    return () => window.removeEventListener('popstate', handleLocationChange);
+  }, []);
+
+  const navigateTo = (path) => {
+    window.history.pushState({}, '', path);
+    setCurrentPath(path);
+    // Reset animations state
+    setActiveField(null);
+    setAuthStatus(path === '/verify-email' ? 'verify' : 'idle');
+    window.scrollTo(0, 0);
+  };
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const cleanPath = currentPath.split('?')[0];
+    const protectedRoutes = ['/upload', '/dashboard'];
+    const authRoutes = ['/login', '/signup', '/forgot-password', '/verify-email'];
+
+    if (protectedRoutes.includes(cleanPath)) {
+      if (!token) {
+        navigateTo('/login');
+      }
+    } else if (authRoutes.includes(cleanPath)) {
+      if (token) {
+        navigateTo('/upload');
+      }
+    }
+  }, [currentPath]);
   const startDemo = () => {
     if (demoStep !== 'idle') return;
     
@@ -737,40 +980,62 @@ export default function App() {
     setDemoMessage('');
   };
 
+  // Scroll lock ref to prevent performance-costly re-renders during active scrolling
+  const isScrollingRef = React.useRef(false);
+
   useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 20);
+    let ticking = false;
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          setIsScrolled(window.scrollY > 20);
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Scroll event listener Scroll Spy
+  // Optimized Scroll Spy and active link indicator
   useEffect(() => {
+    let ticking = false;
     const handleScrollSpy = () => {
-      const sectionIds = ['home', 'features', 'how-it-works', 'pricing', 'contact'];
-      
-      // At the bottom of the page, Contact is active
-      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 60) {
-        setActiveLink('Contact');
-        return;
-      }
-
-      const scrollPosition = window.scrollY + 200; // offset for sticky header
-
-      for (let i = sectionIds.length - 1; i >= 0; i--) {
-        const id = sectionIds[i];
-        const el = document.getElementById(id);
-        if (el) {
-          if (scrollPosition >= el.offsetTop) {
-            const mappedName = 
-              id === 'home' ? 'Home' :
-              id === 'features' ? 'Features' :
-              id === 'how-it-works' ? 'How it Works' :
-              id === 'pricing' ? 'Pricing' :
-              id === 'contact' ? 'Contact' : 'Home';
-            setActiveLink(mappedName);
-            break;
+      if (isScrollingRef.current) return;
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const sectionIds = ['home', 'features', 'how-it-works', 'faq', 'contact'];
+          
+          if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 60) {
+            setActiveLink('Contact');
+            ticking = false;
+            return;
           }
-        }
+
+          const scrollPosition = window.scrollY + 120; // smaller offset for exact triggers
+
+          for (let i = sectionIds.length - 1; i >= 0; i--) {
+            const id = sectionIds[i];
+            const el = document.getElementById(id);
+            if (el) {
+              if (scrollPosition >= el.offsetTop) {
+                const mappedName = 
+                  id === 'home' ? 'Home' :
+                  id === 'features' ? 'Features' :
+                  id === 'how-it-works' ? 'How it Works' :
+                  id === 'faq' ? 'FAQ' :
+                  id === 'contact' ? 'Contact' : 'Home';
+                
+                // Only update state if active link actually changed to prevent expensive re-renders
+                setActiveLink(prev => prev !== mappedName ? mappedName : prev);
+                break;
+              }
+            }
+          }
+          ticking = false;
+        });
+        ticking = true;
       }
     };
 
@@ -782,56 +1047,61 @@ export default function App() {
   const scrollToSection = (id) => {
     const el = document.getElementById(id);
     if (el) {
+      isScrollingRef.current = true;
       el.scrollIntoView({ behavior: 'smooth' });
-      // Map id to link name immediately
       const mappedName = 
         id === 'home' ? 'Home' :
         id === 'features' ? 'Features' :
         id === 'how-it-works' ? 'How it Works' :
-        id === 'pricing' ? 'Pricing' :
+        id === 'faq' ? 'FAQ' :
         id === 'contact' ? 'Contact' : 'Home';
       setActiveLink(mappedName);
+      
+      // Unlock Scroll Spy calculations after scroll animation completes
+      setTimeout(() => {
+        isScrollingRef.current = false;
+      }, 700);
     }
   };
 
-  // Animation variants
+  // Optimized Animation variants (trigger once when visible, standard timings)
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      transition: { staggerChildren: 0.14, delayChildren: 0.1 }
+      transition: { staggerChildren: 0.1, delayChildren: 0.05 }
     }
   };
 
   const fadeUp = {
-    hidden: { opacity: 0, y: 30 },
+    hidden: { opacity: 0, y: 15 },
     visible: {
       opacity: 1, y: 0,
-      transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1] }
+      transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] }
     }
   };
 
   const scaleIn = {
-    hidden: { opacity: 0, scale: 0.88 },
+    hidden: { opacity: 0, scale: 0.94 },
     visible: {
       opacity: 1, scale: 1,
-      transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.3 }
+      transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1], delay: 0.15 }
     }
   };
 
-  // Gentle floating for decorative items
+  // Slower gentle cartoon wiggles for decorative items to reduce CPU usage
   const float = (dur, delay = 0) => ({
-    y: [0, -10, 0],
-    transition: { duration: dur, repeat: Infinity, repeatType: "reverse", ease: "easeInOut", delay }
+    y: [0, -6, 0],
+    transition: { duration: dur + 1.5, repeat: Infinity, repeatType: "reverse", ease: "easeInOut", delay }
   });
 
-  const floatRotate = (dur, delay = 0, deg = 8) => ({
-    y: [0, -10, 0],
+  const floatRotate = (dur, delay = 0, deg = 5) => ({
+    y: [0, -6, 0],
     rotate: [-deg, deg, -deg],
-    transition: { duration: dur, repeat: Infinity, repeatType: "reverse", ease: "easeInOut", delay }
+    transition: { duration: dur + 1.5, repeat: Infinity, repeatType: "reverse", ease: "easeInOut", delay }
   });
 
-  const navLinks = ['Home', 'Features', 'How it Works', 'Pricing', 'Contact'];
+  const navLinks = ['Home', 'Features', 'How it Works', 'FAQ', 'Contact'];
 
   const features = [
     {
@@ -871,6 +1141,53 @@ export default function App() {
       color: '#7C5CFF'
     }
   ];
+  // Route-based Page Rendering Switch
+  const cleanPath = currentPath.split('?')[0];
+
+  if (cleanPath === '/login') {
+    return (
+      <AuthLayout activeField={activeField} status={authStatus} onNavigate={navigateTo}>
+        <Login
+          onNavigate={navigateTo}
+          onSuccess={() => navigateTo('/upload')}
+          onActiveFieldChange={setActiveField}
+          setStatus={setAuthStatus}
+        />
+      </AuthLayout>
+    );
+  }
+  if (cleanPath === '/signup') {
+    return (
+      <AuthLayout activeField={activeField} status={authStatus} onNavigate={navigateTo}>
+        <Signup
+          onNavigate={navigateTo}
+          onSuccess={() => navigateTo('/verify-email')}
+          onActiveFieldChange={setActiveField}
+          setStatus={setAuthStatus}
+        />
+      </AuthLayout>
+    );
+  }
+  if (cleanPath === '/forgot-password') {
+    return (
+      <AuthLayout activeField={activeField} status={authStatus} onNavigate={navigateTo}>
+        <ForgotPassword onNavigate={navigateTo} />
+      </AuthLayout>
+    );
+  }
+  if (cleanPath === '/verify-email') {
+    return (
+      <AuthLayout activeField={activeField} status={authStatus} onNavigate={navigateTo}>
+        <VerifyEmail onNavigate={navigateTo} />
+      </AuthLayout>
+    );
+  }
+  if (cleanPath === '/upload') {
+    return <UploadLayout onNavigate={navigateTo} />;
+  }
+  if (cleanPath === '/dashboard') {
+    return <Dashboard onNavigate={navigateTo} />;
+  }
 
   return (
     <div className="relative min-h-screen bg-cream text-text overflow-x-hidden">
@@ -927,15 +1244,17 @@ export default function App() {
           <div className="hidden md:flex items-center gap-3">
             <a
               href="#login"
-              className="px-5 py-2.5 text-[14px] font-bold text-text-light hover:text-text border-2 border-gray-200 hover:border-gray-300 rounded-full transition-all duration-200"
+              onClick={(e) => { e.preventDefault(); navigateTo('/login'); }}
+              className="px-5 py-2.5 text-[14px] font-bold text-text-light hover:text-text border-2 border-gray-200 hover:border-gray-300 rounded-full transition-all duration-200 cursor-pointer"
             >
               Log In
             </a>
             <motion.a
-              href="#get-started"
+              href="#signup"
+              onClick={(e) => { e.preventDefault(); navigateTo('/signup'); }}
               whileHover={{ y: -2, scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
-              className="btn-yellow text-[14px] !py-2.5 !px-6 flex items-center gap-1.5"
+              className="btn-yellow text-[14px] !py-2.5 !px-6 flex items-center gap-1.5 cursor-pointer"
             >
               Get Started <ArrowRight className="w-4 h-4 btn-arrow" />
             </motion.a>
@@ -977,10 +1296,18 @@ export default function App() {
                   );
                 })}
                 <div className="h-px bg-card-border my-2" />
-                <a href="#login" className="text-center py-3 text-base font-bold text-text-light hover:text-text rounded-full border-2 border-gray-200">
+                <a
+                  href="#login"
+                  onClick={(e) => { e.preventDefault(); navigateTo('/login'); setIsMobileMenuOpen(false); }}
+                  className="text-center py-3 text-base font-bold text-text-light hover:text-text rounded-full border-2 border-gray-200"
+                >
                   Log In
                 </a>
-                <a href="#get-started" className="btn-yellow text-center text-base">
+                <a
+                  href="#signup"
+                  onClick={(e) => { e.preventDefault(); navigateTo('/signup'); setIsMobileMenuOpen(false); }}
+                  className="btn-yellow text-center text-base"
+                >
                   Get Started →
                 </a>
               </div>
@@ -1048,10 +1375,11 @@ export default function App() {
               className="flex flex-wrap items-center gap-4 mb-12"
             >
               <motion.a
-                href="#upload"
+                href="#signup"
+                onClick={(e) => { e.preventDefault(); navigateTo('/signup'); }}
                 whileHover={{ y: -3, scale: 1.04 }}
                 whileTap={{ scale: 0.97 }}
-                className="btn-yellow inline-flex items-center gap-2.5 text-base"
+                className="btn-yellow inline-flex items-center gap-2.5 text-base cursor-pointer"
               >
                 <Upload className="w-[18px] h-[18px] btn-arrow" />
                 Upload Resume
@@ -1720,23 +2048,53 @@ export default function App() {
             </p>
           </motion.div>
 
-          {/* Main Layout Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-stretch max-w-5xl mx-auto">
+          {/* Main Layout Grid (3 columns on desktop, stacks on mobile) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 items-stretch max-w-6xl mx-auto relative">
 
-            {/* LEFT SIDE: Interactive Upload Card */}
+            {/* Absolute positioned floating resume (for scanning step animation, desktop only) */}
+            <AnimatePresence>
+              {demoStep === 'scanning' && (
+                <motion.div
+                  initial={{ left: "15%", top: "45%", opacity: 0, scale: 0.8 }}
+                  animate={{
+                    // Floats from left (15%) to robot hand (45%) to machine scanner (80%)
+                    left: ["15%", "45%", "80%"],
+                    top: ["45%", "35%", "50%"],
+                    opacity: [0, 1, 1, 0],
+                    scale: [0.8, 1.15, 1.15, 0.4]
+                  }}
+                  exit={{ opacity: 0 }}
+                  transition={{
+                    duration: 2.0,
+                    times: [0, 0.5, 0.8, 1.0],
+                    ease: "easeInOut"
+                  }}
+                  className="absolute w-14 h-20 z-30 pointer-events-none hidden lg:block"
+                >
+                  <svg viewBox="0 0 60 80" fill="none" className="w-full h-full shadow-md bg-white rounded-lg border-2 border-[#7C5CFF]">
+                    <rect width="60" height="80" rx="8" fill="white"/>
+                    <line x1="12" y1="20" x2="48" y2="20" stroke="#D1D5DB" strokeWidth="2.5"/>
+                    <line x1="12" y1="35" x2="40" y2="35" stroke="#D1D5DB" strokeWidth="2.5"/>
+                    <line x1="12" y1="50" x2="44" y2="50" stroke="#D1D5DB" strokeWidth="2.5"/>
+                  </svg>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* LEFT SIDE: Interactive Upload Card (span-4) */}
             <motion.div
               initial={{ opacity: 0, x: -30 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
-              className="flex flex-col"
+              className="lg:col-span-4 flex flex-col"
             >
               <div
                 onDragOver={(e) => { e.preventDefault(); setIsDemoDragOver(true); }}
                 onDragLeave={() => setIsDemoDragOver(false)}
                 onDrop={(e) => { e.preventDefault(); setIsDemoDragOver(false); startDemo(); }}
                 onClick={startDemo}
-                className={`feature-card flex-1 flex flex-col items-center justify-center text-center p-8 sm:p-12 cursor-pointer transition-all duration-300 min-h-[360px] ${
+                className={`feature-card flex-1 flex flex-col items-center justify-center text-center p-8 cursor-pointer transition-all duration-300 min-h-[360px] ${
                   isDemoDragOver ? 'demo-upload-glowing' : ''
                 }`}
               >
@@ -1744,66 +2102,109 @@ export default function App() {
                 <motion.div
                   animate={isDemoDragOver || demoStep === 'scanning' ? { scale: [1, 1.15, 1], rotate: [0, 5, -5, 0] } : {}}
                   transition={{ repeat: Infinity, duration: 1.5 }}
-                  className={`w-20 h-20 rounded-3xl bg-secondary/8 flex items-center justify-center mb-6 text-secondary`}
+                  className="w-20 h-20 rounded-3xl bg-secondary/8 flex items-center justify-center mb-6 text-secondary"
                 >
                   <Upload className="w-10 h-10" />
                 </motion.div>
 
-                <h3 className="text-lg sm:text-xl font-extrabold text-text mb-2">
-                  Drag your Resume Here
+                <h3 className="text-lg font-extrabold text-text mb-2">
+                  Drag Resume Here
                 </h3>
                 <p className="text-sm text-text-light mb-6">
                   or <span className="text-secondary font-bold hover:underline">Browse Files</span>
                 </p>
 
-                <div className="flex gap-4 text-xs font-semibold text-text-muted">
+                <div className="flex gap-3 text-xs font-semibold text-text-muted">
                   <span className="px-3 py-1 bg-cream-dark border border-card-border rounded-md">PDF</span>
                   <span className="px-3 py-1 bg-cream-dark border border-card-border rounded-md">DOCX</span>
                 </div>
-
-                {/* Scanning document floating anim */}
-                <AnimatePresence>
-                  {demoStep === 'scanning' && (
-                    <motion.div
-                      initial={{ y: 80, x: 0, opacity: 0, scale: 0.8 }}
-                      animate={{ y: -80, x: 120, opacity: [0, 1, 1, 0], scale: [0.8, 1.1, 0.7] }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 1.8, ease: "easeInOut" }}
-                      className="absolute z-20"
-                    >
-                      <svg viewBox="0 0 60 80" fill="none" className="w-14 h-20 shadow-md">
-                        <rect width="60" height="80" rx="8" fill="white" stroke="#7C5CFF" strokeWidth="3"/>
-                        <line x1="12" y1="20" x2="48" y2="20" stroke="#D1D5DB" strokeWidth="2.5"/>
-                        <line x1="12" y1="35" x2="40" y2="35" stroke="#D1D5DB" strokeWidth="2.5"/>
-                        <line x1="12" y1="50" x2="44" y2="50" stroke="#D1D5DB" strokeWidth="2.5"/>
-                      </svg>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
               </div>
             </motion.div>
 
-            {/* RIGHT SIDE: Playful AI Processing / Results Panel */}
+            {/* CENTER: Cute AI Robot Mascot (span-3) */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="lg:col-span-3 flex flex-col items-center justify-center p-4 relative"
+            >
+              <InteractiveDemoRobot step={demoStep} />
+
+              {/* Celebrating Confetti/Sparkles in Results State */}
+              {demoStep === 'results' && (
+                <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                  {[...Array(12)].map((_, idx) => (
+                    <motion.span
+                      key={idx}
+                      initial={{ y: 80, x: 0, scale: 0.5, opacity: 1 }}
+                      animate={{
+                        y: [-20, -120],
+                        x: [0, (idx % 2 === 0 ? 45 : -45) * (idx * 0.2 + 0.5)],
+                        rotate: [0, 360],
+                        opacity: [1, 0]
+                      }}
+                      transition={{
+                        duration: 2.2,
+                        repeat: Infinity,
+                        delay: idx * 0.15,
+                        ease: "easeOut"
+                      }}
+                      className="absolute text-xl"
+                      style={{
+                        left: `${35 + (idx % 3) * 15}%`,
+                        top: '60%'
+                      }}
+                    >
+                      {['🎉', '✨', '🎈', '⭐', '🌸'][idx % 5]}
+                    </motion.span>
+                  ))}
+                </div>
+              )}
+            </motion.div>
+
+            {/* RIGHT SIDE: AI Processing / Results Panel (span-5) */}
             <motion.div
               initial={{ opacity: 0, x: 30 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
-              className="flex flex-col"
+              className="lg:col-span-5 flex flex-col"
             >
               <div className={`feature-card flex-1 flex flex-col p-6 sm:p-8 min-h-[360px] transition-all duration-500 ${
                 demoStep === 'processing' ? 'demo-machine-glowing' : ''
               }`}>
 
-                {/* Idle / Scanning State */}
-                {(demoStep === 'idle' || demoStep === 'scanning') && (
+                {/* Idle State */}
+                {demoStep === 'idle' && (
                   <div className="flex-1 flex flex-col items-center justify-center text-center">
-                    <ThumbsUpRobot className="w-32 h-32 mb-6" />
+                    <div className="w-16 h-16 rounded-full bg-cream-dark flex items-center justify-center text-text-muted mb-4 border border-card-border">
+                      ⚙
+                    </div>
                     <h3 className="text-[17px] font-extrabold text-text mb-2">
-                      {demoStep === 'scanning' ? "Catching resume... 🫴" : "AI Processing Machine"}
+                      AI Processing Machine
                     </h3>
                     <p className="text-sm text-text-light max-w-xs">
-                      {demoStep === 'scanning' ? "Got it! Feeding it to the processor..." : "Click or drop a resume on the left to start the magic!"}
+                      Click or drop a resume on the left to start the magic!
+                    </p>
+                  </div>
+                )}
+
+                {/* Scanning state */}
+                {demoStep === 'scanning' && (
+                  <div className="flex-1 flex flex-col items-center justify-center text-center">
+                    <motion.div
+                      animate={{ scale: [1, 1.05, 1], rotate: [0, 3, -3, 0] }}
+                      transition={{ repeat: Infinity, duration: 1.5 }}
+                      className="w-16 h-16 rounded-full bg-secondary/8 text-secondary flex items-center justify-center mb-4 border border-secondary/20"
+                    >
+                      🔍
+                    </motion.div>
+                    <h3 className="text-[17px] font-extrabold text-text mb-2">
+                      Catching resume... 🫴
+                    </h3>
+                    <p className="text-sm text-text-light max-w-xs">
+                      Robot is picking the resume and sliding it into the scanner.
                     </p>
                   </div>
                 )}
@@ -1811,9 +2212,8 @@ export default function App() {
                 {/* Processing State */}
                 {demoStep === 'processing' && (
                   <div className="flex-1 flex flex-col justify-center">
-                    {/* Glowing machinery SVG */}
+                    {/* Rotating Gears */}
                     <div className="flex items-center justify-center gap-6 mb-8 relative">
-                      {/* Left Gear */}
                       <svg viewBox="0 0 60 60" fill="none" className="w-16 h-16 gear-spin-clockwise">
                         <circle cx="30" cy="30" r="20" fill="none" stroke="#FF8A50" strokeWidth="4"/>
                         {[0, 45, 90, 135, 180, 225, 270, 315].map((deg) => (
@@ -1822,7 +2222,6 @@ export default function App() {
                         <circle cx="30" cy="30" r="8" fill="#1F1F1F"/>
                       </svg>
                       
-                      {/* Right Gear */}
                       <svg viewBox="0 0 50 50" fill="none" className="w-12 h-12 gear-spin-counter">
                         <circle cx="25" cy="25" r="16" fill="none" stroke="#7C5CFF" strokeWidth="3"/>
                         {[0, 45, 90, 135, 180, 225, 270, 315].map((deg) => (
@@ -1831,14 +2230,19 @@ export default function App() {
                         <circle cx="25" cy="25" r="6" fill="#1F1F1F"/>
                       </svg>
 
-                      {/* Small floating sparkles */}
                       <span className="absolute top-2 left-1/3 sparkle-twinkle">✨</span>
                       <span className="absolute bottom-2 right-1/3 sparkle-twinkle-delayed">✨</span>
                     </div>
 
-                    <h4 className="text-base font-extrabold text-text mb-2 text-center">
-                      {demoMessage}
-                    </h4>
+                    <div className="mb-4 text-center">
+                      <h4 className="text-base font-extrabold text-text mb-1">
+                        ⚙ {demoMessage}
+                      </h4>
+                      {/* Playful ASCII loader bar */}
+                      <span className="text-sm font-mono text-secondary block select-none">
+                        {demoProgress < 30 ? "███░░░░░░░" : demoProgress < 60 ? "██████░░░░" : demoProgress < 90 ? "████████░░" : "██████████"}
+                      </span>
+                    </div>
 
                     {/* Progress Bar Container */}
                     <div className="w-full h-4 bg-cream-dark border-2 border-card-border rounded-full overflow-hidden mb-2">
@@ -1869,14 +2273,15 @@ export default function App() {
                       </button>
                     </div>
 
-                    {/* Scrollable results list */}
+                    {/* Scrollable results list (popping out one after another) */}
                     <div className="flex-1 flex flex-col gap-4 overflow-y-auto max-h-[300px] pr-2">
                       
-                      {/* ATS Gauge Card */}
+                      {/* Card 1: ATS Score */}
                       <motion.div
-                        initial={{ opacity: 0, y: 15 }}
+                        initial={{ opacity: 0, y: 25 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="p-4 bg-accent-green/5 border-2 border-accent-green/20 rounded-2xl flex items-center justify-between"
+                        transition={{ delay: 0.1, type: "spring", stiffness: 120 }}
+                        className="p-4 bg-accent-green/5 border-2 border-accent-green/20 rounded-2xl flex items-center justify-between shadow-sm"
                       >
                         <div>
                           <span className="text-xs font-bold text-accent-green block uppercase tracking-wide">ATS SCORE</span>
@@ -1892,16 +2297,16 @@ export default function App() {
                         </div>
                       </motion.div>
 
-                      {/* Skills Found */}
+                      {/* Card 2: Skills Found */}
                       <motion.div
-                        initial={{ opacity: 0, y: 15 }}
+                        initial={{ opacity: 0, y: 25 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.15 }}
-                        className="p-4 bg-white border border-card-border rounded-2xl"
+                        transition={{ delay: 0.3, type: "spring", stiffness: 120 }}
+                        className="p-4 bg-white border border-card-border rounded-2xl shadow-sm"
                       >
                         <span className="text-xs font-bold text-accent-green block uppercase tracking-wide mb-2">✓ Skills Found</span>
                         <div className="flex flex-wrap gap-2">
-                          {['Python', 'SQL', 'Power BI', 'Excel'].map((s) => (
+                          {['Python', 'SQL', 'Power BI'].map((s) => (
                             <span key={s} className="px-2.5 py-1 bg-accent-green/8 text-accent-green text-xs font-bold rounded-lg border border-accent-green/10">
                               ✓ {s}
                             </span>
@@ -1909,12 +2314,12 @@ export default function App() {
                         </div>
                       </motion.div>
 
-                      {/* Missing Skills */}
+                      {/* Card 3: Missing Skills */}
                       <motion.div
-                        initial={{ opacity: 0, y: 15 }}
+                        initial={{ opacity: 0, y: 25 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.3 }}
-                        className="p-4 bg-white border border-card-border rounded-2xl"
+                        transition={{ delay: 0.5, type: "spring", stiffness: 120 }}
+                        className="p-4 bg-white border border-card-border rounded-2xl shadow-sm"
                       >
                         <span className="text-xs font-bold text-accent-orange block uppercase tracking-wide mb-2">⚠ Missing Skills</span>
                         <div className="flex flex-wrap gap-2">
@@ -1926,20 +2331,18 @@ export default function App() {
                         </div>
                       </motion.div>
 
-                      {/* Job Matches */}
+                      {/* Card 4: Job Matches */}
                       <motion.div
-                        initial={{ opacity: 0, y: 15 }}
+                        initial={{ opacity: 0, y: 25 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.45 }}
-                        className="p-4 bg-white border border-card-border rounded-2xl"
+                        transition={{ delay: 0.7, type: "spring", stiffness: 120 }}
+                        className="p-4 bg-white border border-card-border rounded-2xl shadow-sm"
                       >
                         <span className="text-xs font-bold text-secondary block uppercase tracking-wide mb-2.5">💼 Job Matches</span>
                         <div className="flex flex-col gap-2">
                           {[
                             { name: 'Infosys', match: '95%' },
-                            { name: 'TCS', match: '91%' },
-                            { name: 'Microsoft', match: '84%' },
-                            { name: 'Google', match: '79%' }
+                            { name: 'Microsoft', match: '90%' }
                           ].map((job) => (
                             <div key={job.name} className="flex justify-between items-center text-xs font-bold border-b border-card-border/40 pb-1.5 last:border-b-0 last:pb-0">
                               <span className="text-text">{job.name}</span>
@@ -1960,50 +2363,694 @@ export default function App() {
         </div>
       </section>
 
-      {/* Placeholders for future sections */}
-      <div id="pricing" className="h-[20px]" />
+      {/* ═══════════════════════════════════════════
+          DASHBOARD PREVIEW SECTION
+          ═══════════════════════════════════════════ */}
+      <section className="relative z-10 py-20 sm:py-28 bg-cream border-t border-card-border overflow-hidden" id="dashboard-preview">
+        
+        {/* Slow floating decorative elements */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <motion.div
+            animate={{ y: [-15, 15, -15], rotate: [0, 10, 0] }}
+            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute top-[12%] left-[8%] opacity-35"
+          >
+            <TinySparkle className="w-6 h-6" color="#FFD54F" />
+          </motion.div>
+          <motion.div
+            animate={{ y: [15, -15, 15], rotate: [0, -10, 0] }}
+            transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute bottom-[14%] right-[6%] opacity-35"
+          >
+            <TinySparkle className="w-6 h-6" color="#7C5CFF" />
+          </motion.div>
+          <motion.div
+            animate={{ x: [-10, 10, -10], y: [-10, 10, -10] }}
+            transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute top-[28%] right-[8%] opacity-30"
+          >
+            <PaperAirplane className="w-8 h-8" />
+          </motion.div>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-6 sm:px-8 relative z-10">
+
+          {/* Section Header */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-80px' }}
+            transition={{ duration: 0.7 }}
+            className="text-center mb-16"
+          >
+            <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-secondary/10 border-2 border-secondary/20 text-sm font-bold text-text mb-5">
+              📊 Dashboard Preview
+            </div>
+            <h2 className="text-3xl sm:text-4xl lg:text-[2.6rem] font-black text-text leading-[1.15]">
+              Your <span className="text-secondary bg-secondary/8 px-3 rounded-xl border border-secondary/15">Career</span>,<br />Visualized Beautifully
+            </h2>
+            <div className="flex justify-center mt-3 mb-5">
+              <svg width="80" height="14" viewBox="0 0 80 14" fill="none">
+                <path d="M3 10 Q12 3 24 9 Q36 15 48 8 Q60 1 72 9" stroke="#7C5CFF" strokeWidth="3.5" strokeLinecap="round" fill="none"/>
+              </svg>
+            </div>
+            <p className="text-text-light text-base sm:text-[17px] leading-relaxed max-w-2xl mx-auto">
+              CareerLensAI transforms your resume into powerful insights, personalized recommendations, ATS optimization and career analytics — all in one beautiful dashboard.
+            </p>
+          </motion.div>
+
+          {/* 60 / 40 Layout Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start max-w-7xl mx-auto">
+
+            {/* LEFT SIDE: Premium Dashboard Preview (60%) */}
+            <motion.div
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8, type: "spring", bounce: 0.2 }}
+              className="lg:col-span-7 flex flex-col"
+            >
+              {/* Premium Browser Window Frame */}
+              <div className="bg-white border-3 border-text rounded-3xl overflow-hidden shadow-[8px_8px_0px_#1F1F1F] flex flex-col w-full">
+                
+                {/* Browser Top Bar */}
+                <div className="bg-cream-dark border-b-3 border-text px-4 py-3 flex items-center justify-between select-none">
+                  {/* Dots */}
+                  <div className="flex items-center gap-2">
+                    <span className="w-3.5 h-3.5 rounded-full bg-accent-orange border-2 border-text inline-block" />
+                    <span className="w-3.5 h-3.5 rounded-full bg-primary border-2 border-text inline-block" />
+                    <span className="w-3.5 h-3.5 rounded-full bg-accent-green border-2 border-text inline-block" />
+                  </div>
+                  {/* Title / URL Bar */}
+                  <div className="bg-white border-2 border-text rounded-lg px-4 py-1 text-xs font-semibold text-text-light w-1/2 text-center truncate">
+                    careerlensai.com/dashboard/samarth
+                  </div>
+                  <div className="w-12" />
+                </div>
+
+                {/* Dashboard Inner Top Bar */}
+                <div className="border-b-2 border-card-border px-6 py-4 flex items-center justify-between bg-cream/10">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-primary border-2 border-text flex items-center justify-center font-black text-text text-sm">
+                      S
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-extrabold text-text leading-tight">Hello Samarth 👋</h4>
+                      <span className="text-[11px] text-text-muted font-bold block">Uploaded July 5</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3.5">
+                    {/* Shaking Notification Bell */}
+                    <motion.button
+                      animate={{ rotate: [0, -10, 10, -10, 10, 0] }}
+                      transition={{ repeat: Infinity, repeatDelay: 4.5, duration: 0.7 }}
+                      className="p-2 rounded-xl border-2 border-card-border hover:bg-cream-dark transition-colors cursor-pointer text-text relative"
+                    >
+                      <Bell className="w-4.5 h-4.5" />
+                      <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-accent-orange border border-white" />
+                    </motion.button>
+
+                    <button className="p-2 rounded-xl border-2 border-card-border hover:bg-cream-dark transition-colors cursor-pointer text-text">
+                      <Settings className="w-4.5 h-4.5" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Dashboard Widgets Content */}
+                <div className="p-6 bg-cream/2 bg-opacity-35 flex flex-col gap-6 max-h-[640px] overflow-y-auto">
+
+                  {/* FIRST ROW: Four Stat Cards */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    
+                    {/* Widget 1: ATS Score */}
+                    <motion.div
+                      whileHover={{ y: -4 }}
+                      className="bg-white border-2 border-card-border p-3.5 rounded-2xl flex flex-col items-center justify-center text-center relative overflow-hidden shadow-sm"
+                    >
+                      <span className="text-[10px] font-black text-text-muted uppercase tracking-wide">ATS SCORE</span>
+                      <h5 className="text-xl font-black text-accent-green mt-1">92%</h5>
+                      <span className="text-[10px] font-bold text-accent-green bg-accent-green/8 px-2 py-0.5 rounded-md border border-accent-green/10 mt-1.5">
+                        Excellent
+                      </span>
+                    </motion.div>
+
+                    {/* Widget 2: Resume Score */}
+                    <motion.div
+                      whileHover={{ y: -4 }}
+                      className="bg-white border-2 border-card-border p-3.5 rounded-2xl flex flex-col items-center justify-center text-center relative overflow-hidden shadow-sm"
+                    >
+                      <span className="text-[10px] font-black text-text-muted uppercase tracking-wide">RESUME SCORE</span>
+                      <h5 className="text-xl font-black text-secondary mt-1">89%</h5>
+                      <span className="text-[10px] font-bold text-secondary bg-secondary/8 px-2 py-0.5 rounded-md border border-secondary/10 mt-1.5 flex items-center gap-0.5">
+                        Trending Up ↗
+                      </span>
+                    </motion.div>
+
+                    {/* Widget 3: Jobs Matched */}
+                    <motion.div
+                      whileHover={{ y: -4 }}
+                      className="bg-white border-2 border-card-border p-3.5 rounded-2xl flex flex-col items-center justify-center text-center relative overflow-hidden shadow-sm"
+                    >
+                      <span className="text-[10px] font-black text-text-muted uppercase tracking-wide">JOBS MATCHED</span>
+                      <h5 className="text-xl font-black text-text mt-1">124</h5>
+                      <span className="text-[10px] font-bold text-text-light bg-cream-dark px-2 py-0.5 rounded-md border border-card-border mt-1.5 flex items-center gap-1">
+                        💼 Matched
+                      </span>
+                    </motion.div>
+
+                    {/* Widget 4: Missing Skills */}
+                    <motion.div
+                      whileHover={{ y: -4 }}
+                      className="bg-white border-2 border-card-border p-3.5 rounded-2xl flex flex-col items-center justify-center text-center relative overflow-hidden shadow-sm"
+                    >
+                      <span className="text-[10px] font-black text-text-muted uppercase tracking-wide">MISSING SKILLS</span>
+                      <h5 className="text-xl font-black text-accent-orange mt-1">6</h5>
+                      <span className="text-[10px] font-bold text-accent-orange bg-accent-orange/8 px-2 py-0.5 rounded-md border border-accent-orange/10 mt-1.5">
+                        ⚠ Add Soon
+                      </span>
+                    </motion.div>
+
+                  </div>
+
+                  {/* SECOND ROW: Charts (Skill Distribution / Resume Sections) */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                    {/* Left: Skill Distribution (Bar Chart) */}
+                    <div className="bg-white border-2 border-card-border p-4.5 rounded-2xl shadow-sm flex flex-col">
+                      <h5 className="text-xs font-black text-text uppercase tracking-wide mb-3">🛠 Skill Distribution</h5>
+                      <div className="flex flex-col gap-2.5">
+                        {[
+                          { name: 'Python', width: '95%' },
+                          { name: 'SQL', width: '82%' },
+                          { name: 'Power BI', width: '75%' },
+                          { name: 'Machine Learning', width: '70%' },
+                          { name: 'FastAPI', width: '62%' }
+                        ].map((s, idx) => (
+                          <div key={s.name} className="flex flex-col gap-0.5 text-xs font-bold text-text-light">
+                            <div className="flex justify-between">
+                              <span>{s.name}</span>
+                              <span className="text-secondary">{s.width}</span>
+                            </div>
+                            <div className="w-full bg-cream-dark border border-card-border h-3.5 rounded-full overflow-hidden">
+                              <motion.div
+                                className="h-full bg-secondary rounded-full"
+                                initial={{ width: "0%" }}
+                                whileInView={{ width: s.width }}
+                                viewport={{ once: true }}
+                                transition={{ duration: 1.2, delay: idx * 0.1, ease: "easeOut" }}
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Right: Resume Sections (Donut Chart) */}
+                    <div className="bg-white border-2 border-card-border p-4.5 rounded-2xl shadow-sm flex flex-col items-center justify-center">
+                      <h5 className="text-xs font-black text-text uppercase tracking-wide self-start mb-3">📊 Resume Sections</h5>
+                      
+                      <div className="flex items-center gap-5 w-full">
+                        {/* Custom Segmented SVG Donut Chart */}
+                        <div className="relative w-28 h-28 shrink-0 flex items-center justify-center">
+                          <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
+                            {/* Segment 1: Education (Yellow) */}
+                            <motion.circle
+                              cx="50" cy="50" r="38"
+                              stroke="#FFD54F" strokeWidth="12" fill="none"
+                              strokeDasharray="238.7"
+                              initial={{ strokeDashoffset: 238.7 }}
+                              whileInView={{ strokeDashoffset: 238.7 * 0.75 }}
+                              viewport={{ once: true }}
+                              transition={{ duration: 1.5, ease: "easeOut" }}
+                            />
+                            {/* Segment 2: Projects (Purple) */}
+                            <motion.circle
+                              cx="50" cy="50" r="38"
+                              stroke="#7C5CFF" strokeWidth="12" fill="none"
+                              strokeDasharray="238.7"
+                              initial={{ strokeDashoffset: 238.7 }}
+                              whileInView={{ strokeDashoffset: 238.7 * 0.55 }}
+                              viewport={{ once: true }}
+                              transition={{ duration: 1.5, ease: "easeOut", delay: 0.2 }}
+                              className="origin-center"
+                              style={{ rotate: "90deg" }}
+                            />
+                            {/* Segment 3: Skills (Orange) */}
+                            <motion.circle
+                              cx="50" cy="50" r="38"
+                              stroke="#FF8A50" strokeWidth="12" fill="none"
+                              strokeDasharray="238.7"
+                              initial={{ strokeDashoffset: 238.7 }}
+                              whileInView={{ strokeDashoffset: 238.7 * 0.35 }}
+                              viewport={{ once: true }}
+                              transition={{ duration: 1.5, ease: "easeOut", delay: 0.4 }}
+                              className="origin-center"
+                              style={{ rotate: "162deg" }}
+                            />
+                            {/* Segment 4: Experience (Green) */}
+                            <motion.circle
+                              cx="50" cy="50" r="38"
+                              stroke="#22C55E" strokeWidth="12" fill="none"
+                              strokeDasharray="238.7"
+                              initial={{ strokeDashoffset: 238.7 }}
+                              whileInView={{ strokeDashoffset: 238.7 * 0.10 }}
+                              viewport={{ once: true }}
+                              transition={{ duration: 1.5, ease: "easeOut", delay: 0.6 }}
+                              className="origin-center"
+                              style={{ rotate: "234deg" }}
+                            />
+                          </svg>
+                          <div className="absolute inset-0 flex flex-col items-center justify-center">
+                            <span className="text-base font-black text-text leading-none">5</span>
+                            <span className="text-[8px] font-bold text-text-muted uppercase mt-0.5">Blocks</span>
+                          </div>
+                        </div>
+
+                        {/* Legends */}
+                        <div className="flex flex-col gap-1.5 text-xs font-bold text-text-light flex-1">
+                          <div className="flex items-center gap-1.5">
+                            <span className="w-2.5 h-2.5 rounded bg-[#FFD54F] border border-text/10" />
+                            <span>Education</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="w-2.5 h-2.5 rounded bg-[#7C5CFF] border border-text/10" />
+                            <span>Projects</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="w-2.5 h-2.5 rounded bg-[#FF8A50] border border-text/10" />
+                            <span>Skills</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="w-2.5 h-2.5 rounded bg-[#22C55E] border border-text/10" />
+                            <span>Experience</span>
+                          </div>
+                        </div>
+                      </div>
+
+                    </div>
+
+                  </div>
+
+                  {/* THIRD ROW: Career Roadmap Horizontal Timeline */}
+                  <div className="bg-white border-2 border-card-border p-5 rounded-2xl shadow-sm">
+                    <h5 className="text-xs font-black text-text uppercase tracking-wide mb-4">🗺 Personalized Career Roadmap</h5>
+                    
+                    <div className="flex items-center justify-between gap-2 overflow-x-auto pb-2 scrollbar-none">
+                      {[
+                        { title: 'Data Analyst', bg: '#FFD54F' },
+                        { title: 'Business Analyst', bg: '#FF8A50' },
+                        { title: 'Senior Analyst', bg: '#7C5CFF' },
+                        { title: 'Analytics Engineer', bg: '#FF8A50' },
+                        { title: 'AI Engineer', bg: '#22C55E' }
+                      ].map((node, index) => (
+                        <div key={node.title} className="flex items-center gap-2 shrink-0">
+                          <motion.div
+                            initial={{ scale: 0, opacity: 0 }}
+                            whileInView={{ scale: 1, opacity: 1 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: index * 0.2, type: "spring", stiffness: 100 }}
+                            whileHover={{ scale: 1.05 }}
+                            className="px-3.5 py-2.5 rounded-xl border-2 border-text flex items-center justify-center font-extrabold text-xs text-text shadow-sm"
+                            style={{ backgroundColor: `${node.bg}15`, borderColor: node.bg }}
+                          >
+                            {node.title}
+                          </motion.div>
+                          
+                          {index < 4 && (
+                            <motion.span
+                              initial={{ opacity: 0, x: -10 }}
+                              whileInView={{ opacity: 1, x: 0 }}
+                              viewport={{ once: true }}
+                              transition={{ delay: index * 0.2 + 0.1 }}
+                              className="text-text-muted font-bold text-sm shrink-0 select-none px-0.5"
+                            >
+                              ➔
+                            </motion.span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* FOURTH ROW: Job Recommendations */}
+                  <div className="bg-white border-2 border-card-border p-5 rounded-2xl shadow-sm">
+                    <h5 className="text-xs font-black text-text uppercase tracking-wide mb-4">💼 Smart Job Recommendations</h5>
+                    
+                    <div className="flex gap-4 overflow-x-auto pb-3 scrollbar-thin">
+                      {[
+                        { company: 'Google', salary: '$140k - $180k', loc: 'Mountain View, CA', remote: 'Hybrid', match: '84%', logo: 'G' },
+                        { company: 'Microsoft', salary: '$150k - $190k', loc: 'Redmond, WA', remote: 'Remote', match: '91%', logo: 'M' },
+                        { company: 'Infosys', salary: '$95k - $120k', loc: 'New York, NY', remote: 'On-site', match: '95%', logo: 'I' },
+                        { company: 'Amazon', salary: '$160k - $210k', loc: 'Seattle, WA', remote: 'Remote', match: '82%', logo: 'A' }
+                      ].map((j, idx) => (
+                        <motion.div
+                          key={j.company}
+                          whileHover={{ y: -3 }}
+                          className="w-56 shrink-0 p-4 border-2 border-card-border hover:border-secondary/40 rounded-xl bg-cream/4 relative flex flex-col justify-between transition-colors shadow-sm"
+                        >
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-2">
+                              <div className="w-7 h-7 rounded bg-text text-white flex items-center justify-center font-black text-xs">
+                                {j.logo}
+                              </div>
+                              <span className="text-xs font-extrabold text-text">{j.company}</span>
+                            </div>
+                            <span className="px-2 py-0.5 bg-secondary/8 text-secondary text-[10px] font-bold rounded border border-secondary/10">
+                              {j.match} Match
+                            </span>
+                          </div>
+
+                          <div className="mb-4">
+                            <span className="text-sm font-black text-text block leading-snug">{j.salary}</span>
+                            <span className="text-[11px] text-text-light font-bold block mt-1">{j.loc}</span>
+                          </div>
+
+                          <div className="flex items-center justify-between mt-auto">
+                            <span className="text-[9px] font-black text-text-muted bg-cream-dark px-1.5 py-0.5 rounded border border-card-border uppercase">
+                              {j.remote}
+                            </span>
+                            <button className="px-3 py-1 bg-secondary text-white font-extrabold text-[10px] rounded-lg hover:bg-secondary-dark transition-colors cursor-pointer">
+                              Apply
+                            </button>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* FIFTH ROW: AI Suggestions Speech Bubble */}
+                  <div className="bg-white border-2 border-card-border p-5 rounded-2xl shadow-sm flex flex-col sm:flex-row items-center gap-4.5">
+                    
+                    {/* Mini Mascot Animation */}
+                    <div className="shrink-0 flex flex-col items-center">
+                      <svg viewBox="0 0 100 120" fill="none" className="w-16 h-20 select-none">
+                        <ellipse cx="50" cy="110" rx="20" ry="3" fill="#E8D5B0" opacity="0.4"/>
+                        {/* Arm waving */}
+                        <motion.path
+                          d="M 22 75 Q 8 60 12 50"
+                          stroke="#7C5CFF" strokeWidth="5.5" strokeLinecap="round"
+                          animate={{ rotate: [0, -15, 15, -15, 0] }}
+                          transition={{ repeat: Infinity, duration: 2.5, repeatDelay: 1.5 }}
+                          style={{ transformOrigin: "22px 75px" }}
+                        />
+                        {/* Head */}
+                        <motion.g
+                          animate={{ y: [0, -2, 0] }}
+                          transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
+                        >
+                          <rect x="25" y="20" width="50" height="42" rx="10" fill="#7C5CFF"/>
+                          <rect x="29" y="24" width="42" height="34" rx="8" fill="white"/>
+                          {/* Eyes */}
+                          <g className="robot-eye">
+                            <circle cx="42" cy="38" r="4.5" fill="#1F1F1F"/>
+                            <circle cx="43.5" cy="36.5" r="1.5" fill="white"/>
+                          </g>
+                          <g className="robot-eye-delayed">
+                            <circle cx="58" cy="38" r="4.5" fill="#1F1F1F"/>
+                            <circle cx="59.5" cy="36.5" r="1.5" fill="white"/>
+                          </g>
+                          <path d="M 44 47 Q 50 52 56 47" stroke="#1F1F1F" strokeWidth="2.5" strokeLinecap="round" fill="none"/>
+                        </motion.g>
+                        {/* Body */}
+                        <rect x="36" y="65" width="28" height="25" rx="6" fill="#7C5CFF"/>
+                        <rect x="40" y="70" width="20" height="15" rx="3" fill="#F9F5EB"/>
+                        <circle cx="50" cy="77" r="3" fill="#FFD54F"/>
+                      </svg>
+                    </div>
+
+                    {/* Speech Bubble / Suggestions List */}
+                    <div className="flex-1 p-4 bg-cream/10 border-2 border-card-border rounded-2xl relative speech-bubble">
+                      <h6 className="text-xs font-black text-secondary uppercase tracking-wide mb-2.5">🤖 AI Recommendations</h6>
+                      
+                      <div className="flex flex-col gap-2 text-xs font-bold text-text-light">
+                        {[
+                          'Add measurable achievements (e.g. Optimized queries by 45%)',
+                          'Improve ATS keyword density for Machine Learning terms',
+                          'Mention specific SQL and Power BI dashboard projects',
+                          'Rewrite career summary to highlight target job matches'
+                        ].map((s, idx) => (
+                          <motion.div
+                            key={idx}
+                            initial={{ opacity: 0, x: -10 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: idx * 0.25, duration: 0.5 }}
+                            className="flex items-start gap-2.5"
+                          >
+                            <span className="text-accent-green text-[13px] leading-none select-none shrink-0">✔</span>
+                            <span>{s}</span>
+                          </motion.div>
+                        ))}
+                      </div>
+                    </div>
+
+                  </div>
+
+                </div>
+
+              </div>
+            </motion.div>
+
+            {/* RIGHT SIDE: Beautiful Feature Explanation Cards (40%) */}
+            <div className="lg:col-span-5 flex flex-col gap-6">
+              {[
+                {
+                  icon: '🤖',
+                  title: 'AI Resume Analysis',
+                  desc: 'Our AI evaluates every section of your resume and identifies critical strengths and formatting weaknesses.',
+                  color: '#FFD54F'
+                },
+                {
+                  icon: '📈',
+                  title: 'ATS Optimization',
+                  desc: 'Increase recruiter compatibility and bypass layout scanners using intelligent keyword density suggestions.',
+                  color: '#7C5CFF'
+                },
+                {
+                  icon: '🎯',
+                  title: 'Job Matching',
+                  desc: 'Discover matching career recommendations perfectly suited to your skillset and experience level.',
+                  color: '#22C55E'
+                },
+                {
+                  icon: '🧠',
+                  title: 'Skill Gap Detection',
+                  desc: 'Identify exactly what tools, libraries, or methodologies you need to acquire to stand out to employers.',
+                  color: '#FF8A50'
+                },
+                {
+                  icon: '🗺',
+                  title: 'Personalized Career Roadmap',
+                  desc: 'Receive an automated step-by-step career timeline generated by AI to guide your self-learning journey.',
+                  color: '#7C5CFF'
+                }
+              ].map((f, idx) => (
+                <motion.div
+                  key={f.title}
+                  initial={{ opacity: 0, x: 30 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true, margin: '-40px' }}
+                  transition={{ duration: 0.5, delay: idx * 0.15 }}
+                  whileHover={{ y: -4, scale: 1.015 }}
+                  className="feature-card p-5 cursor-pointer relative overflow-hidden transition-all duration-300"
+                >
+                  <div className="flex gap-4 items-start">
+                    <div
+                      className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border-2 border-text text-base"
+                      style={{ backgroundColor: `${f.color}15` }}
+                    >
+                      {f.icon}
+                    </div>
+                    <div>
+                      <h4 className="text-[15px] font-black text-text mb-1">{f.title}</h4>
+                      <p className="text-xs sm:text-[13px] text-text-light leading-relaxed">{f.desc}</p>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════
+          FAQ SECTION
+          ═══════════════════════════════════════════ */}
+      <section className="relative z-10 py-20 sm:py-28 bg-cream border-t border-card-border overflow-hidden" id="faq">
+        
+        {/* Slow cartoon doodles floating in FAQ */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <motion.div animate={float(4.5, 0.4)} className="absolute top-[10%] right-[15%] sparkle-twinkle">
+            <TinySparkle className="w-5 h-5" color="#FF8A50" />
+          </motion.div>
+          <motion.div animate={float(5.5, 0.8)} className="absolute bottom-[15%] left-[8%] sparkle-twinkle-delayed">
+            <TinySparkle className="w-5 h-5" color="#7C5CFF" />
+          </motion.div>
+          <motion.div animate={floatRotate(6, 0.2, 5)} className="absolute top-[40%] left-[5%]">
+            <Star className="w-6 h-6 text-primary opacity-45" />
+          </motion.div>
+        </div>
+
+        <div className="max-w-4xl mx-auto px-6 sm:px-8 relative z-10">
+
+          {/* Section Header */}
+          <motion.div
+            initial={{ opacity: 0, y: 25 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-80px' }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-16"
+          >
+            <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary/20 border-2 border-primary/30 text-sm font-bold text-text mb-5">
+              ❓ Frequently Asked Questions
+            </div>
+            <h2 className="text-3xl sm:text-4xl lg:text-[2.6rem] font-black text-text leading-[1.15]">
+              Everything You Need to Know
+            </h2>
+            <div className="flex justify-center mt-3 mb-5">
+              <svg width="80" height="14" viewBox="0 0 80 14" fill="none">
+                <path d="M3 10 Q12 3 24 9 Q36 15 48 8 Q60 1 72 9" stroke="#FFD54F" strokeWidth="3.5" strokeLinecap="round" fill="none"/>
+              </svg>
+            </div>
+            <p className="text-text-light text-base sm:text-[17px] leading-relaxed max-w-2xl mx-auto">
+              Find answers to common questions about CareerLensAI, resume analysis, ATS scoring, privacy, and AI-powered recommendations.
+            </p>
+          </motion.div>
+
+          {/* FAQ Accordions Grid */}
+          <div className="flex flex-col gap-4">
+            {[
+              {
+                q: 'Is my resume stored?',
+                a: 'No. Your resume is processed on secure temporary servers in real-time memory to perform the analysis, and is instantly discarded after insights are generated.'
+              },
+              {
+                q: 'How is the ATS score calculated?',
+                a: 'Our AI cross-references your resume layout, keywords, missing hard/soft skills, project metrics, and job titles against our proprietary database of thousands of industry-standard successful resume benchmarks.'
+              },
+              {
+                q: 'Which file formats are supported?',
+                a: 'We support standard PDF and Microsoft Word (DOCX) formats up to 5MB. For best analysis accuracy, we recommend cleanly formatted PDF files.'
+              },
+              {
+                q: 'Can I edit my resume after analysis?',
+                a: 'Yes! CareerLensAI lets you re-upload your updated resume as many times as you like to verify if your updates successfully optimized your ATS score and keyword match.'
+              },
+              {
+                q: 'Will AI rewrite my resume?',
+                a: 'No. CareerLensAI does not change your original document. It points out grammar improvements, keyword omissions, and gives copy-pasteable bullet point recommendations to help you write it better.'
+              },
+              {
+                q: 'How accurate are job recommendations?',
+                a: 'Recommendations are highly accurate, using semantic skills matching algorithms that compare your qualifications directly to requirements and locations of hundreds of live developer job listings.'
+              },
+              {
+                q: 'Can I download my report?',
+                a: 'Yes, you can export your dashboard analysis report, key recommendations, and custom career roadmap path as a clean printable PDF report card.'
+              },
+              {
+                q: 'Is CareerLensAI free?',
+                a: 'Yes, basic resume scanning, keyword checkouts, and dashboard analytics are completely free to use. Premium career roadmaps and custom analytics reports are coming soon.'
+              },
+              {
+                q: 'Can recruiters view my resume?',
+                a: 'Recruiters cannot view your files unless you explicitly toggle on "Share with Hiring Partners" in your career settings dashboard.'
+              },
+              {
+                q: 'How secure is my data?',
+                a: 'Extremely secure. All resume uploads use TLS/SSL encryption in transit, and we strictly follow modern data safety policies (GDPR and CCPA compliant).'
+              }
+            ].map((item, idx) => {
+              const isOpen = openFaqIndex === idx;
+              return (
+                <motion.div
+                  key={idx}
+                  initial={{ opacity: 0, y: 15 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: '-20px' }}
+                  transition={{ duration: 0.5, delay: idx * 0.05 }}
+                  whileHover={{ y: -2 }}
+                  className="bg-white border-2 border-card-border rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all"
+                >
+                  <button
+                    onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
+                    className="w-full text-left px-6 py-5 flex items-center justify-between gap-4 font-extrabold text-base sm:text-lg text-text select-none cursor-pointer"
+                  >
+                    <span>{item.q}</span>
+                    <motion.div
+                      animate={{ rotate: isOpen ? 90 : 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="text-secondary shrink-0"
+                    >
+                      <ChevronRight className="w-5 h-5" />
+                    </motion.div>
+                  </button>
+
+                  <AnimatePresence initial={false}>
+                    {isOpen && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.25, ease: "easeInOut" }}
+                      >
+                        <div className="px-6 pb-5 pt-1 text-sm sm:text-base text-text-light border-t border-card-border/60 leading-relaxed bg-[#FFFDF9]/60">
+                          {item.a}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
+              );
+            })}
+          </div>
+
+        </div>
+      </section>
 
 
       {/* ═══════════════════════════════════════════
-          PLAYFUL CTA CARD — Thumbs-Up Mascot
+          PLAYFUL CTA CARD — Pointing Mascot
           ═══════════════════════════════════════════ */}
       <section className="max-w-7xl mx-auto px-6 sm:px-8 pb-16 relative z-10">
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 25 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-80px' }}
-          transition={{ duration: 0.7 }}
+          transition={{ duration: 0.6 }}
           className="cta-section px-8 sm:px-12 py-10 sm:py-12 flex flex-col sm:flex-row items-center justify-between gap-6"
         >
           <div className="flex items-center gap-5">
-            <ThumbsUpRobot className="w-20 h-20 sm:w-24 sm:h-24 shrink-0" />
+            <PointingRobot className="w-20 h-20 sm:w-24 sm:h-24 shrink-0" />
             <div>
               <h3 className="text-xl sm:text-2xl font-black text-text">
-                Ready to Analyze Your Own Resume? <Rocket className="w-5 h-5 inline-block text-accent-orange" />
+                Ready to Build Your Dream Career? <Rocket className="w-5 h-5 inline-block text-accent-orange" />
               </h3>
               <p className="text-sm text-text-light mt-1 max-w-lg">
-                Upload your resume and unlock personalized career insights powered by AI.
+                Upload your resume and let our AI optimize your profile to attract top hiring teams.
               </p>
             </div>
           </div>
           <div className="flex items-center gap-3 shrink-0">
             <motion.a
-              href="#upload"
-              onClick={(e) => { e.preventDefault(); scrollToSection('home'); }}
+              href="#signup"
+              onClick={(e) => { e.preventDefault(); navigateTo('/signup'); }}
               whileHover={{ y: -3, scale: 1.04 }}
               whileTap={{ scale: 0.97 }}
               className="btn-yellow inline-flex items-center gap-2 px-6 py-3 text-base shadow-[0_4px_14px_rgba(255,213,79,0.35)] cursor-pointer"
             >
-              Analyze My Resume <ArrowRight className="w-5 h-5" />
+              Analyze Resume <ArrowRight className="w-5 h-5" />
             </motion.a>
             <motion.a
-              href="#how-it-works"
-              onClick={(e) => { e.preventDefault(); scrollToSection('how-it-works'); }}
+              href="#product-demo"
+              onClick={(e) => { e.preventDefault(); scrollToSection('product-demo'); }}
               whileHover={{ y: -3, scale: 1.04 }}
               whileTap={{ scale: 0.97 }}
               className="btn-outline inline-flex items-center gap-2 px-6 py-3 text-base cursor-pointer"
             >
-              Learn More
+              View Demo
             </motion.a>
           </div>
         </motion.div>
@@ -2013,34 +3060,79 @@ export default function App() {
       {/* ═══════════════════════════════════════════
           FOOTER / CONTACT
           ═══════════════════════════════════════════ */}
-      <footer id="contact" className="border-t-2 border-card-border py-8 relative z-10">
-        <div className="max-w-7xl mx-auto px-6 sm:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <SmallRobot className="w-7 h-7" />
-            <span className="text-sm font-bold text-text">
-              Career<span className="text-secondary">Lens</span>AI
-            </span>
-          </div>
-          <p className="text-xs text-text-muted font-semibold">
-            © 2026 CareerLensAI. All rights reserved.
-          </p>
-          <div className="flex items-center gap-6">
-            {['Privacy', 'Terms', 'Contact'].map(l => (
-              <a
-                key={l}
-                href={l === 'Contact' ? '#contact' : `#${l.toLowerCase()}`}
-                onClick={(e) => {
-                  if (l === 'Contact') {
-                    e.preventDefault();
-                    scrollToSection('contact');
-                  }
-                }}
-                className="text-xs font-bold text-text-light hover:text-secondary transition-colors"
-              >
-                {l}
+      <footer id="contact" className="border-t-2 border-card-border bg-[#FFFDF9] py-12 relative z-10">
+        <div className="max-w-7xl mx-auto px-6 sm:px-8 flex flex-col lg:flex-row justify-between gap-12">
+          
+          {/* Brand Info */}
+          <div className="max-w-xs flex flex-col gap-4">
+            <div className="flex items-center gap-2">
+              <SmallRobot className="w-8 h-8" />
+              <span className="text-lg font-bold text-text">
+                Career<span className="text-secondary">Lens</span>AI
+              </span>
+            </div>
+            <p className="text-xs sm:text-[13px] text-text-light leading-relaxed font-semibold">
+              Transforming resumes into actionable insights, skill roadmap charts, and smart recruiter-matching recommendations.
+            </p>
+            {/* Social Icons */}
+            <div className="flex items-center gap-4 mt-2">
+              <a href="https://linkedin.com" target="_blank" rel="noreferrer" className="text-text-muted hover:text-secondary transition-colors" title="LinkedIn">
+                <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                  <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
+                </svg>
               </a>
-            ))}
+              <a href="https://github.com" target="_blank" rel="noreferrer" className="text-text-muted hover:text-secondary transition-colors" title="GitHub">
+                <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                  <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                </svg>
+              </a>
+              <a href="mailto:support@careerlensai.com" className="text-text-muted hover:text-secondary transition-colors" title="Email Us">
+                <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                  <path d="M0 3v18h24v-18h-24zm21.518 2l-9.518 7.713-9.518-7.713h19.036zm-19.518 14v-11.817l10 8.104 10-8.104v11.817h-20z"/>
+                </svg>
+              </a>
+            </div>
           </div>
+
+          {/* Quick Links Sitemaps */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-8">
+            <div className="flex flex-col gap-3">
+              <h5 className="text-[13px] font-black text-text uppercase tracking-wide">Quick Links</h5>
+              <div className="flex flex-col gap-2.5 text-xs font-bold text-text-light">
+                <a href="#home" onClick={(e) => { e.preventDefault(); scrollToSection('home'); }} className="hover:text-secondary hover:underline transition-all">Home</a>
+                <a href="#features" onClick={(e) => { e.preventDefault(); scrollToSection('features'); }} className="hover:text-secondary hover:underline transition-all">Features</a>
+                <a href="#how-it-works" onClick={(e) => { e.preventDefault(); scrollToSection('how-it-works'); }} className="hover:text-secondary hover:underline transition-all">How It Works</a>
+                <a href="#faq" onClick={(e) => { e.preventDefault(); scrollToSection('faq'); }} className="hover:text-secondary hover:underline transition-all">FAQ</a>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <h5 className="text-[13px] font-black text-text uppercase tracking-wide">Resources</h5>
+              <div className="flex flex-col gap-2.5 text-xs font-bold text-text-light">
+                <a href="#privacy" className="hover:text-secondary hover:underline transition-all">Privacy Policy</a>
+                <a href="#terms" className="hover:text-secondary hover:underline transition-all">Terms of Service</a>
+                <a href="#support" className="hover:text-secondary hover:underline transition-all">Support</a>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-3 col-span-2 sm:col-span-1">
+              <h5 className="text-[13px] font-black text-text uppercase tracking-wide">Legal</h5>
+              <div className="flex flex-col gap-2.5 text-xs font-bold text-text-light">
+                <a href="#github" className="hover:text-secondary hover:underline transition-all">GitHub Repo</a>
+                <p className="text-[11px] text-text-muted leading-relaxed font-semibold">GDPR & CCPA Compliant data guidelines.</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div className="max-w-7xl mx-auto px-6 sm:px-8 border-t border-card-border/60 mt-12 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p className="text-xs text-text-muted font-bold">
+            © 2026 CareerLensAI. All Rights Reserved.
+          </p>
+          <p className="text-[10px] text-text-muted font-bold">
+            Design crafted with premium cartoon style vector aesthetics.
+          </p>
         </div>
       </footer>
 
