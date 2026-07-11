@@ -22,6 +22,3 @@ CareerLensAI/
 - **Career Path Recommendations**: Suggest potential job matches and learning resources.
 - **Visual Analytics**: Interactive dashboards for recruiters and students.
 
-## Getting Started
-
-Detailed instructions for setting up the backend, frontend, and database will be added to their respective directories.
