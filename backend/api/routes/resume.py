@@ -98,7 +98,7 @@ async def upload_resume(
 
     # 6. Perform dynamic scoring and recommendations via AI analyzer
     try:
-        analysis_data = analyze_resume_text(parsed_data, job_description)
+        analysis_data = analyze_resume_text(parsed_data, job_description, db)
     except Exception as e:
         logger.error(f"AI analysis calculation failed: {e}")
         # Cleanup

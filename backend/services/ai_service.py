@@ -5,6 +5,8 @@ import logging
 from typing import Dict, Any, List, Optional
 # pyrefly: ignore [missing-import]
 import google.generativeai as genai
+from sqlalchemy.orm import Session
+from database.models import JobRole
 
 logger = logging.getLogger(__name__)
 
@@ -15,18 +17,70 @@ if GEMINI_API_KEY:
 else:
     logger.warning("GEMINI_API_KEY not found in environment. Falling back to local heuristic calculations.")
 
-def analyze_resume_text(parsed_resume: Dict[str, Any], job_description: Optional[str] = None) -> Dict[str, Any]:
+def analyze_resume_text(parsed_resume: Dict[str, Any], job_description: Optional[str] = None, db: Session = None) -> Dict[str, Any]:
     """
     Core entrypoint for resume analysis. Uses Gemini AI if GEMINI_API_KEY is configured,
     otherwise falls back to dynamic local heuristic evaluations.
     """
+    target_jd = job_description
+    job_matches = []
+    
+    # NEW DATA-DRIVEN WORKFLOW: Match against our Job Knowledge Base
+    if db:
+        try:
+            user_skills = set([s.lower() for s in parsed_resume.get("skills", [])])
+            roles = db.query(JobRole).all()
+            scored_roles = []
+            
+            for r in roles:
+                # Combine required skills and ATS keywords for matching
+                role_skills = set([s.lower() for s in r.required_skills] + [s.lower() for s in r.ats_keywords])
+                overlap = len(user_skills.intersection(role_skills))
+                # Simple Jaccard-ish index, boosted for better UI representation
+                base_score = (overlap / len(role_skills)) * 100 if role_skills else 0
+                match_score = min(int(base_score * 2.5 + 40), 99) 
+                scored_roles.append((match_score, r))
+                
+            # Sort by highest score
+            scored_roles.sort(key=lambda x: x[0], reverse=True)
+            top_5 = scored_roles[:5]
+            
+            # Format top 5 roles for the UI
+            colors = ["#4285F4", "#F25022", "#FF9900", "#007CC3", "#34A853"]
+            job_matches = [
+                {
+                    "company": f"{r.industry} Sector",
+                    "role": r.title,
+                    "match": score,
+                    "salary": "₹15-25 LPA", 
+                    "location": "Remote / Hybrid",
+                    "logo": r.title[0],
+                    "color": colors[i % len(colors)]
+                } for i, (score, r) in enumerate(top_5)
+            ]
+            
+            # If the user didn't paste a specific JD, use our Top Matched role!
+            if not target_jd and top_5:
+                top_role = top_5[0][1]
+                target_jd = f"Target Role: {top_role.title}\nIndustry: {top_role.industry}\nRequired Skills: {', '.join(top_role.required_skills)}\nATS Keywords: {', '.join(top_role.ats_keywords)}"
+                logger.info(f"Using matched job role as target JD: {top_role.title}")
+                
+        except Exception as e:
+            logger.error(f"Failed to match against Job Knowledge Base: {e}")
+
     if GEMINI_API_KEY:
         try:
-            return analyze_resume_with_gemini(parsed_resume, job_description)
+            result = analyze_resume_with_gemini(parsed_resume, target_jd)
+            if job_matches:
+                result["jobMatches"] = job_matches
+            return result
         except Exception as e:
             logger.error(f"Gemini API analysis failed: {e}. Falling back to heuristic mapping.")
             
-    return analyze_resume_with_heuristics(parsed_resume, job_description)
+    result = analyze_resume_with_heuristics(parsed_resume, target_jd)
+    if job_matches:
+        result["jobMatches"] = job_matches
+    return result
 
 def analyze_resume_with_gemini(parsed_resume: Dict[str, Any], job_description: Optional[str] = None) -> Dict[str, Any]:
     """

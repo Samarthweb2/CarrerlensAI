@@ -61,3 +61,14 @@ class Analysis(Base):
 
     user = relationship("User", back_populates="analyses")
     resume = relationship("Resume", back_populates="analysis")
+
+class JobRole(Base):
+    __tablename__ = "job_roles"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String, index=True, nullable=False)
+    industry = Column(String, nullable=False)
+    required_skills = Column(JSON, nullable=False)
+    preferred_skills = Column(JSON, nullable=True)
+    experience_level = Column(String, nullable=True)
+    ats_keywords = Column(JSON, nullable=False)
