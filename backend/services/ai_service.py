@@ -24,6 +24,8 @@ def analyze_resume_text(parsed_resume: Dict[str, Any], job_description: Optional
     """
     target_jd = job_description
     job_matches = []
+    missing_skills_from_db = []
+    top_matches_text = ""
     
     # NEW DATA-DRIVEN WORKFLOW: Match against our Job Knowledge Base
     if db:
@@ -34,35 +36,76 @@ def analyze_resume_text(parsed_resume: Dict[str, Any], job_description: Optional
             
             for r in roles:
                 # Combine required skills and ATS keywords for matching
-                role_skills = set([s.lower() for s in r.required_skills] + [s.lower() for s in r.ats_keywords])
+                role_skills = set([s.lower() for s in (r.required_skills or [])] + [s.lower() for s in (r.ats_keywords or [])])
                 overlap = len(user_skills.intersection(role_skills))
-                # Simple Jaccard-ish index, boosted for better UI representation
-                base_score = (overlap / len(role_skills)) * 100 if role_skills else 0
-                match_score = min(int(base_score * 2.5 + 40), 99) 
+                total_unique_skills = len(user_skills.union(role_skills))
+                
+                # Jaccard index similarity
+                base_score = (overlap / total_unique_skills) * 100 if total_unique_skills > 0 else 0
+                
+                # Boost match score for better UI visibility (e.g. min 40, max 99)
+                match_score = min(int(base_score * 1.5 + 40), 99) if overlap > 0 else 0
                 scored_roles.append((match_score, r))
                 
             # Sort by highest score
             scored_roles.sort(key=lambda x: x[0], reverse=True)
+            top_20 = scored_roles[:20]
             top_5 = scored_roles[:5]
             
             # Format top 5 roles for the UI
             colors = ["#4285F4", "#F25022", "#FF9900", "#007CC3", "#34A853"]
-            job_matches = [
-                {
-                    "company": f"{r.industry} Sector",
+            job_matches = []
+            for i, (score, r) in enumerate(top_5):
+                # Format estimated salary range
+                salary_str = "₹8–15 LPA"
+                if r.salary_min and r.salary_max:
+                    salary_str = f"₹{r.salary_min // 100000}–{r.salary_max // 100000} LPA"
+                
+                job_matches.append({
+                    "company": r.company or "Tech Enterprise",
                     "role": r.title,
                     "match": score,
-                    "salary": "₹15-25 LPA", 
-                    "location": "Remote / Hybrid",
-                    "logo": r.title[0],
+                    "salary": salary_str,
+                    "location": r.location or "Remote",
+                    "logo": r.company[0] if r.company else r.title[0],
                     "color": colors[i % len(colors)]
-                } for i, (score, r) in enumerate(top_5)
-            ]
+                })
+            
+            # Aggregate required skills from top 20 jobs
+            aggregated_required_skills = {}
+            for score, r in top_20:
+                for skill in (r.required_skills or []):
+                    skill_lower = skill.lower()
+                    aggregated_required_skills[skill_lower] = aggregated_required_skills.get(skill_lower, 0) + 1
+            
+            # Sort aggregated skills by frequency
+            sorted_aggregated_skills = sorted(aggregated_required_skills.items(), key=lambda x: x[1], reverse=True)
+            
+            # Identify missing skills: top required skills across matches that the user does not have
+            missing_set = []
+            for skill_lower, freq in sorted_aggregated_skills[:10]:
+                if skill_lower not in user_skills:
+                    # Find proper cased name
+                    proper_name = skill_lower.title()
+                    # Special cased cased skills
+                    if skill_lower == 'sql': proper_name = 'SQL'
+                    elif skill_lower == 'aws': proper_name = 'AWS'
+                    elif skill_lower == 'gcp': proper_name = 'GCP'
+                    elif skill_lower == 'ci/cd': proper_name = 'CI/CD'
+                    elif skill_lower == 'api': proper_name = 'API'
+                    missing_set.append(proper_name)
+            missing_skills_from_db = missing_set
+            
+            # Format top matched jobs summary text for Gemini prompt
+            top_matches_text = "\n".join([
+                f"- {r.title} at {r.company} (Match Score: {score}%)"
+                for score, r in top_5
+            ])
             
             # If the user didn't paste a specific JD, use our Top Matched role!
             if not target_jd and top_5:
                 top_role = top_5[0][1]
-                target_jd = f"Target Role: {top_role.title}\nIndustry: {top_role.industry}\nRequired Skills: {', '.join(top_role.required_skills)}\nATS Keywords: {', '.join(top_role.ats_keywords)}"
+                target_jd = f"Target Role: {top_role.title}\nCompany: {top_role.company}\nDescription: {top_role.description}\nRequired Skills: {', '.join(top_role.required_skills or [])}\nATS Keywords: {', '.join(top_role.ats_keywords or [])}"
                 logger.info(f"Using matched job role as target JD: {top_role.title}")
                 
         except Exception as e:
@@ -70,7 +113,7 @@ def analyze_resume_text(parsed_resume: Dict[str, Any], job_description: Optional
 
     if GEMINI_API_KEY:
         try:
-            result = analyze_resume_with_gemini(parsed_resume, target_jd)
+            result = analyze_resume_with_gemini(parsed_resume, target_jd, missing_skills_from_db, top_matches_text)
             if job_matches:
                 result["jobMatches"] = job_matches
             return result
@@ -82,7 +125,12 @@ def analyze_resume_text(parsed_resume: Dict[str, Any], job_description: Optional
         result["jobMatches"] = job_matches
     return result
 
-def analyze_resume_with_gemini(parsed_resume: Dict[str, Any], job_description: Optional[str] = None) -> Dict[str, Any]:
+def analyze_resume_with_gemini(
+    parsed_resume: Dict[str, Any], 
+    job_description: Optional[str] = None,
+    missing_skills_from_db: List[str] = None,
+    top_matches_text: str = None
+) -> Dict[str, Any]:
     """
     Queries Gemini 1.5/2.5 API with strict JSON schema instructions to analyze resume text.
     """
@@ -94,11 +142,18 @@ def analyze_resume_with_gemini(parsed_resume: Dict[str, Any], job_description: O
     jd_context = ""
     if job_description:
         jd_context = f"\nTarget Job Description to align and score against:\n{job_description}\n"
+        
+    db_context = ""
+    if missing_skills_from_db:
+        db_context += f"\nBased on database analysis of similar roles, these critical skills are missing from the candidate's resume: {', '.join(missing_skills_from_db)}\n"
+    if top_matches_text:
+        db_context += f"\nThe database similarity search matched the resume with these top roles:\n{top_matches_text}\n"
     
     prompt = f"""
     You are an expert ATS (Applicant Tracking System) parser and student talent advisor.
     Analyze this parsed resume data and generate standard metric grades, missing skills, career roadmap, and matching roles.
     {jd_context}
+    {db_context}
     
     Resume Input Data:
     {json.dumps(parsed_resume, indent=2)}
@@ -111,7 +166,7 @@ def analyze_resume_with_gemini(parsed_resume: Dict[str, Any], job_description: O
         "grammar": 93, // integer grammar score
         "keywords": 86, // integer keyword match percentage
         "skillsFound": ["Python", "SQL", "React"], // list of extracted tech skills
-        "missingSkills": ["Docker", "AWS", "CI/CD"], // list of target skills. CRITICAL: If a job description is provided, this MUST list skills required by the job description that are missing from the resume.
+        "missingSkills": {json.dumps(missing_skills_from_db or ["Docker", "AWS", "CI/CD"])}, // list of target skills. CRITICAL: Ensure you include the database-derived missing skills listed in the context above.
         "suggestions": [
             "Add measurable achievements with exact impact metrics (e.g. 'Improved database query speed by 35%').",
             "Include your portfolio or GitHub links for project verification."

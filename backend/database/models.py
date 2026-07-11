@@ -67,8 +67,22 @@ class JobRole(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, index=True, nullable=False)
+    company = Column(String, nullable=True)
+    location = Column(String, nullable=True)
     industry = Column(String, nullable=False)
+    description = Column(String, nullable=True)
     required_skills = Column(JSON, nullable=False)
     preferred_skills = Column(JSON, nullable=True)
     experience_level = Column(String, nullable=True)
+    salary_min = Column(Integer, nullable=True)
+    salary_max = Column(Integer, nullable=True)
+    work_type = Column(String, nullable=True)  # Remote, Hybrid, On-site
     ats_keywords = Column(JSON, nullable=False)
+
+class Skill(Base):
+    __tablename__ = "skills"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, unique=True, index=True, nullable=False)
+    category = Column(String, nullable=True)  # Programming, Cloud, Data, etc.
+

@@ -19,21 +19,29 @@ Usage:
 """
 
 import csv
-import sqlite3
 import os
 import re
 import sys
 from datetime import datetime
 
+# Add the backend directory to path if running directly
+current_dir = os.path.dirname(os.path.abspath(__file__))
+if current_dir not in sys.path:
+    sys.path.insert(0, current_dir)
+
+# -- SQLAlchemy DB Imports --
+from database.database import SessionLocal, engine, Base
+from database.models import JobRole, Skill
+
 # -- Paths ------------------------------------------------------------
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DB_PATH = os.path.join(BASE_DIR, 'database', 'careerlens.db')
 DATA_DIR = os.path.join(BASE_DIR, 'data')
 RAW_DIR = os.path.join(DATA_DIR, 'raw')
 REPORTS_DIR = os.path.join(DATA_DIR, 'reports')
 
 # Batch size for bulk inserts
 BATCH_SIZE = 500
+
 
 # Required columns  --  a CSV must have at least these to be importable
 REQUIRED_COLUMNS = {'title', 'description'}
@@ -66,14 +74,11 @@ COLUMN_MAP = {
 }
 
 
-# -- Database Connection ----------------------------------------------
-def get_connection():
-    """Returns a connection to the SQLite database with performance pragmas."""
-    conn = sqlite3.connect(DB_PATH)
-    conn.execute("PRAGMA foreign_keys = ON;")
-    conn.execute("PRAGMA journal_mode = WAL;")  # Better write performance
-    conn.row_factory = sqlite3.Row
-    return conn
+# -- Database Connection Helper --
+def get_db_session():
+    """Returns a new SQLAlchemy database session."""
+    return SessionLocal()
+
 
 
 # ======================================================================
@@ -209,6 +214,8 @@ def clean_and_read_rows(filepath, resolved_map, limit=None):
 
             # -- Salary resolution: prefer median, fallback to avg(min, max) --
             salary = None
+            salary_min = None
+            salary_max = None
             med_str = row.get(resolved_map.get('salary', ''), '').strip()
             min_str = row.get(resolved_map.get('min_salary', ''), '').strip()
             max_str = row.get(resolved_map.get('max_salary', ''), '').strip()
@@ -218,14 +225,27 @@ def clean_and_read_rows(filepath, resolved_map, limit=None):
                     salary = int(float(med_str))
                 except (ValueError, TypeError):
                     pass
-            if salary is None and min_str and max_str:
+            if min_str:
                 try:
-                    salary = int((float(min_str) + float(max_str)) / 2)
+                    salary_min = int(float(min_str))
                 except (ValueError, TypeError):
                     pass
+            if max_str:
+                try:
+                    salary_max = int(float(max_str))
+                except (ValueError, TypeError):
+                    pass
+
+            if salary is None and salary_min is not None and salary_max is not None:
+                salary = int((salary_min + salary_max) / 2)
+                
             # Filter out likely hourly rates and unreasonable values
             if salary is not None and salary < 1000:
                 salary = None
+            if salary_min is not None and salary_min < 1000:
+                salary_min = None
+            if salary_max is not None and salary_max < 1000:
+                salary_max = None
 
             # -- Validation: skip rows without title --
             if not title:
@@ -245,8 +265,32 @@ def clean_and_read_rows(filepath, resolved_map, limit=None):
                 location = 'Not Specified'
                 stats['nulls_defaulted'] += 1
 
-            experience_level = experience_level or None
-            work_type = work_type or None
+            # Standardize Work Type
+            if work_type:
+                wt_lower = work_type.lower()
+                if 'remote' in wt_lower or 'wfh' in wt_lower or 'work from home' in wt_lower:
+                    work_type = 'Remote'
+                elif 'hybrid' in wt_lower:
+                    work_type = 'Hybrid'
+                elif 'onsite' in wt_lower or 'office' in wt_lower or 'on-site' in wt_lower:
+                    work_type = 'On-site'
+                else:
+                    work_type = 'On-site'  # default fallback
+            else:
+                work_type = 'On-site'
+
+            # Standardize Experience Level
+            if experience_level:
+                exp_lower = experience_level.lower()
+                if 'senior' in exp_lower or 'sr' in exp_lower or 'lead' in exp_lower or 'principal' in exp_lower:
+                    experience_level = 'Senior'
+                elif 'junior' in exp_lower or 'jr' in exp_lower or 'entry' in exp_lower or 'associate' in exp_lower or 'intern' in exp_lower:
+                    experience_level = 'Entry'
+                else:
+                    experience_level = 'Mid'
+            else:
+                experience_level = 'Mid'
+
 
             # -- Deduplication by (title, company, location) --
             dedup_key = (title.lower(), company.lower(), location.lower())
@@ -261,10 +305,13 @@ def clean_and_read_rows(filepath, resolved_map, limit=None):
                 'location': location,
                 'description': description,
                 'salary': salary,
+                'salary_min': salary_min,
+                'salary_max': salary_max,
                 'experience_level': experience_level,
                 'work_type': work_type,
                 'skills_raw': skills_raw,
             })
+
 
             # Progress indicator for large files
             if stats['total_read'] % 50000 == 0:
@@ -362,22 +409,78 @@ def _categorize_skill(skill_name_lower):
     return 'Technical'
 
 
+def standardize_skill_name(name: str) -> str:
+    """Standardizes skill names to a single canonical format, avoiding duplicates."""
+    name_clean = name.strip().lower()
+    
+    # Python variants
+    if name_clean in ('python', 'python3', 'python programming', 'py'):
+        return 'Python'
+    # JavaScript variants
+    if name_clean in ('js', 'javascript', 'js dev'):
+        return 'JavaScript'
+    # TypeScript variants
+    if name_clean in ('ts', 'typescript'):
+        return 'TypeScript'
+    # React variants
+    if name_clean in ('react', 'react js', 'reactjs', 'react.js'):
+        return 'React'
+    # NextJS variants
+    if name_clean in ('next', 'nextjs', 'next.js'):
+        return 'Next.js'
+    # Vue variants
+    if name_clean in ('vue', 'vuejs', 'vue.js'):
+        return 'Vue.js'
+    # Node variants
+    if name_clean in ('node', 'nodejs', 'node.js'):
+        return 'Node.js'
+    # AWS variants
+    if name_clean in ('aws', 'amazon web services'):
+        return 'AWS'
+    # GCP variants
+    if name_clean in ('gcp', 'google cloud', 'google cloud platform'):
+        return 'GCP'
+    # C++ variants
+    if name_clean in ('c++', 'c plus plus', 'cpp'):
+        return 'C++'
+    # C# variants
+    if name_clean in ('c#', 'c sharp'):
+        return 'C#'
+    # CI/CD variants
+    if name_clean in ('ci/cd', 'cicd', 'continuous integration'):
+        return 'CI/CD'
+    # ML / AI variants
+    if name_clean in ('ml', 'machine learning'):
+        return 'Machine Learning'
+    if name_clean in ('dl', 'deep learning'):
+        return 'Deep Learning'
+    if name_clean in ('nlp', 'natural language processing'):
+        return 'NLP'
+    if name_clean in ('genai', 'generative ai'):
+        return 'Generative AI'
+    if name_clean in ('llm', 'llms', 'large language models'):
+        return 'LLM'
+    # HTML/CSS variants
+    if name_clean == 'html': return 'HTML5'
+    if name_clean == 'css': return 'CSS3'
+    if name_clean == 'tailwind': return 'Tailwind CSS'
+    
+    # Fallback to standard casing
+    if len(name) <= 3:
+        return name.upper()
+    return name.title()
+
+
 def _extract_skills_from_text(text):
     """
     Extracts skills from free-text description using regex matching.
-    Returns a set of skill names (display-cased).
+    Returns a set of standardized skill names.
     """
     found = set()
     for skill_name, pattern in _SKILL_REGEXES:
         if pattern.search(text):
-            # Display-case: capitalize multi-word, uppercase short acronyms
-            display = skill_name.title() if len(skill_name) > 3 else skill_name.upper()
-            # Special cases for well-known names
-            display = display.replace('Ci/Cd', 'CI/CD').replace('Nlp', 'NLP')
-            display = display.replace('Llm', 'LLM').replace('Etl', 'ETL')
-            display = display.replace('Aws', 'AWS').replace('Gcp', 'GCP')
-            display = display.replace('Node\\.Js', 'Node.js')
-            found.add(display)
+            standardized = standardize_skill_name(skill_name)
+            found.add(standardized)
     return found
 
 
@@ -396,6 +499,7 @@ def normalize_skills(clean_rows):
         skills = set()
         skills_raw = row.get('skills_raw', '')
 
+
         # Method 1: Parse from the skills column if available
         if skills_raw:
             # Split by common delimiters: comma, semicolon, pipe
@@ -403,9 +507,10 @@ def normalize_skills(clean_rows):
             for s in raw_list:
                 s = s.strip()
                 if s and len(s) >= 2:
-                    # Normalize display name
-                    display = s.title() if len(s) > 3 else s.upper()
+                    # Normalize display name using our canonical mapper
+                    display = standardize_skill_name(s)
                     skills.add(display)
+
 
         # Method 2: Regex extraction from description (supplements skills column)
         desc_skills = _extract_skills_from_text(row['description'])
@@ -422,16 +527,17 @@ def normalize_skills(clean_rows):
 # ======================================================================
 def load_into_database(clean_rows):
     """
-    Inserts cleaned and normalized rows into SQLite tables:
-      - jobs
+    Inserts cleaned and normalized rows into database tables:
+      - job_roles (using SQLAlchemy ORM)
       - skills (auto-register new skills)
-      - job_skills (junction table)
 
     The load is idempotent: clears existing job data before inserting.
     Returns: dict of load statistics
     """
-    conn = get_connection()
-    cursor = conn.cursor()
+    # Ensure all tables are created in the database
+    Base.metadata.create_all(bind=engine)
+    
+    db = get_db_session()
 
     load_stats = {
         'jobs_inserted': 0,
@@ -440,131 +546,103 @@ def load_into_database(clean_rows):
         'jobs_with_salary': 0,
     }
 
-    # Clear existing job data (ETL is idempotent  --  safe to re-run)
-    cursor.execute("DELETE FROM job_skills;")
-    cursor.execute("DELETE FROM jobs;")
     try:
-        cursor.execute("DELETE FROM sqlite_sequence WHERE name = 'jobs';")
-    except sqlite3.OperationalError:
-        pass  # sqlite_sequence may not exist yet
+        # Clear existing job data (ETL is idempotent)
+        print("  Clearing existing job_roles and skills...")
+        db.query(JobRole).delete()
+        db.query(Skill).delete()
+        db.commit()
 
-    conn.commit()
+        # ---- 1. Extract and register all unique skills ----
+        print("  Registering skills...")
+        unique_skills_set = set()
+        for row in clean_rows:
+            unique_skills_set.update(row.get('skills_parsed', []))
 
-    # -- Load existing skills into memory for fast lookup --
-    cursor.execute("SELECT id, LOWER(name) AS name FROM skills")
-    skill_cache = {row['name']: row['id'] for row in cursor.fetchall()}
-    initial_skill_count = len(skill_cache)
+        skills_objects = []
+        for skill_name in sorted(unique_skills_set):
+            category = _categorize_skill(skill_name.lower())
+            skills_objects.append(Skill(name=skill_name, category=category))
 
-    # -- Batch insert jobs --
-    print("  Loading jobs...")
-    job_batch = []
-    job_ids = []  # Track internal IDs for skill linking
+        db.bulk_save_objects(skills_objects)
+        db.commit()
+        load_stats['skills_registered'] = len(unique_skills_set)
 
-    for idx, row in enumerate(clean_rows):
-        job_batch.append((
-            row['title'], row['company'], row['location'],
-            row['description'], row['salary'],
-            row['experience_level'], row['work_type']
-        ))
+        # ---- 2. Insert Job Roles ----
+        print(f"  Loading {len(clean_rows):,} jobs into job_roles...")
+        job_roles_objects = []
 
-        if row['salary'] is not None:
-            load_stats['jobs_with_salary'] += 1
+        for idx, row in enumerate(clean_rows):
+            skills_parsed_list = sorted(list(row.get('skills_parsed', [])))
+            num_skills = len(skills_parsed_list)
+            
+            # Split skills into required and preferred
+            split_idx = int(num_skills * 0.7)
+            required_skills = skills_parsed_list[:split_idx]
+            preferred_skills = skills_parsed_list[split_idx:]
+            ats_keywords = skills_parsed_list
 
-        # Flush batch
-        if len(job_batch) >= BATCH_SIZE:
-            cursor.executemany("""
-                INSERT INTO jobs (title, company, location, description,
-                                 salary, experience_level, work_type)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            """, job_batch)
-            conn.commit()
-            job_batch = []
+            # Categorize industry based on job title
+            title_lower = row['title'].lower()
+            industry = "Software Engineering"
+            if "data" in title_lower or "analytics" in title_lower:
+                industry = "Data & Analytics"
+            elif "ml" in title_lower or "machine learning" in title_lower or "ai" in title_lower or "deep learning" in title_lower:
+                industry = "AI & Machine Learning"
+            elif "devops" in title_lower or "sre" in title_lower or "cloud" in title_lower or "infrastructure" in title_lower:
+                industry = "Infrastructure"
+            elif "security" in title_lower or "cyber" in title_lower:
+                industry = "Security"
+            elif "mobile" in title_lower or "ios" in title_lower or "android" in title_lower or "flutter" in title_lower or "react native" in title_lower:
+                industry = "Mobile Development"
+            elif "product" in title_lower or "project" in title_lower:
+                industry = "Product"
+            elif "design" in title_lower or "ux" in title_lower or "ui" in title_lower:
+                industry = "Design"
 
-            if (idx + 1) % 10000 == 0:
-                print(f"  ... Inserted {idx + 1:,} jobs")
+            job_role = JobRole(
+                title=row['title'],
+                company=row['company'],
+                location=row['location'],
+                industry=industry,
+                description=row['description'],
+                required_skills=required_skills,
+                preferred_skills=preferred_skills,
+                experience_level=row['experience_level'],
+                salary_min=row['salary_min'],
+                salary_max=row['salary_max'],
+                work_type=row['work_type'],
+                ats_keywords=ats_keywords
+            )
+            job_roles_objects.append(job_role)
 
-    # Flush remaining jobs
-    if job_batch:
-        cursor.executemany("""
-            INSERT INTO jobs (title, company, location, description,
-                             salary, experience_level, work_type)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, job_batch)
-        conn.commit()
+            if row['salary'] is not None or row['salary_min'] is not None:
+                load_stats['jobs_with_salary'] += 1
 
-    load_stats['jobs_inserted'] = len(clean_rows)
+            if len(job_roles_objects) >= BATCH_SIZE:
+                db.bulk_save_objects(job_roles_objects)
+                db.commit()
+                job_roles_objects = []
+                if (idx + 1) % 10000 == 0:
+                    print(f"  ... Inserted {idx + 1:,} job roles")
 
-    # -- Build job ID list (sequential from 1 since we cleared the table) --
-    # We need the internal IDs to link skills
-    print("  Linking skills to jobs...")
-    skill_batch = []
-    seen_pairs = set()
-    link_count = 0
+        if job_roles_objects:
+            db.bulk_save_objects(job_roles_objects)
+            db.commit()
 
-    for internal_id, row in enumerate(clean_rows, start=1):
-        skills_parsed = row.get('skills_parsed', set())
+        load_stats['jobs_inserted'] = len(clean_rows)
+        # We don't have job_skills links anymore, so we set job_skill_links to total skills listed
+        load_stats['job_skill_links'] = sum(len(r.get('skills_parsed', [])) for r in clean_rows)
 
-        for skill_name in skills_parsed:
-            skill_key = skill_name.lower().strip()
-            if not skill_key:
-                continue
+    except Exception as e:
+        print(f"  [ERROR] Database insertion failed: {e}")
+        db.rollback()
+        raise e
+    finally:
+        db.close()
 
-            # Register skill if not in cache
-            if skill_key not in skill_cache:
-                category = _categorize_skill(skill_key)
-                try:
-                    cursor.execute(
-                        "INSERT INTO skills (name, category) VALUES (?, ?)",
-                        (skill_name, category)
-                    )
-                    skill_cache[skill_key] = cursor.lastrowid
-                except sqlite3.IntegrityError:
-                    # Near-duplicate  --  look it up
-                    cursor.execute(
-                        "SELECT id FROM skills WHERE LOWER(name) = ?",
-                        (skill_key,)
-                    )
-                    row_sk = cursor.fetchone()
-                    if row_sk:
-                        skill_cache[skill_key] = row_sk['id']
-                    else:
-                        continue
-
-            skill_id = skill_cache[skill_key]
-            pair = (internal_id, skill_id)
-            if pair in seen_pairs:
-                continue
-            seen_pairs.add(pair)
-
-            # Alternate importance for variety
-            importance = 'Required' if link_count % 3 != 2 else 'Preferred'
-            skill_batch.append((internal_id, skill_id, importance))
-            link_count += 1
-
-            if len(skill_batch) >= BATCH_SIZE:
-                cursor.executemany("""
-                    INSERT OR IGNORE INTO job_skills (job_id, skill_id, importance)
-                    VALUES (?, ?, ?)
-                """, skill_batch)
-                conn.commit()
-                skill_batch = []
-
-                if link_count % 50000 == 0:
-                    print(f"  ... Created {link_count:,} job-skill links")
-
-    # Flush remaining skill links
-    if skill_batch:
-        cursor.executemany("""
-            INSERT OR IGNORE INTO job_skills (job_id, skill_id, importance)
-            VALUES (?, ?, ?)
-        """, skill_batch)
-        conn.commit()
-
-    load_stats['job_skill_links'] = link_count
-    load_stats['skills_registered'] = len(skill_cache) - initial_skill_count
-
-    conn.close()
     return load_stats
+
 
 
 # ======================================================================
@@ -651,20 +729,19 @@ def generate_report(source_files, clean_stats, load_stats, resolved_maps,
     lines.append("## Final Database State")
     lines.append("")
     try:
-        conn = get_connection()
+        db = get_db_session()
         db_stats = {
-            'jobs': conn.execute("SELECT COUNT(*) FROM jobs").fetchone()[0],
-            'skills': conn.execute("SELECT COUNT(*) FROM skills").fetchone()[0],
-            'job_skills': conn.execute("SELECT COUNT(*) FROM job_skills").fetchone()[0],
-            'candidates': conn.execute("SELECT COUNT(*) FROM candidates").fetchone()[0],
+            'job_roles': db.query(JobRole).count(),
+            'skills': db.query(Skill).count(),
         }
-        conn.close()
+        db.close()
         lines.append("| Table | Row Count |")
         lines.append("|---|---|")
         for table, count in db_stats.items():
             lines.append(f"| {table} | {count:,} |")
-    except Exception:
-        lines.append("*(Could not read final database stats)*")
+    except Exception as e:
+        lines.append(f"*(Could not read final database stats: {e})*")
+
     lines.append("")
     lines.append("---")
     lines.append("*Generated by CareerLensAI ETL Pipeline*")
