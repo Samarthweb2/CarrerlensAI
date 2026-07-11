@@ -12,6 +12,7 @@ from api.routes.resume import router as resume_router
 from api.routes.jobs import router as jobs_router
 from api.routes.dashboard import router as dashboard_router
 from api.routes.auth import router as auth_router
+from api.routes.health import router as health_router
 
 # Database initialization
 from database.database import Base, engine
@@ -74,7 +75,7 @@ app.include_router(auth_router, prefix="/api/v1")
 app.include_router(resume_router, prefix="/api/v1")
 app.include_router(jobs_router, prefix="/api/v1")
 app.include_router(dashboard_router, prefix="/api/v1")
-
+app.include_router(health_router)  # Expose /health at root for external ping services
 @app.get("/", tags=["Health Check"])
 async def health_check():
     """
