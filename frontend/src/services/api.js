@@ -3,10 +3,21 @@ import axios from 'axios';
 // Configure FastAPI Base URL
 // Handles both full URLs (e.g. https://x.onrender.com/api/v1) and
 // raw domain URLs from Render's RENDER_EXTERNAL_URL (e.g. https://x.onrender.com)
-let API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
-if (API_BASE_URL && !API_BASE_URL.endsWith('/api/v1')) {
+let API_BASE_URL = import.meta.env.VITE_API_URL;
+
+if (!API_BASE_URL) {
+  if (typeof window !== 'undefined' && window.location.hostname.includes('onrender.com')) {
+    const hostname = window.location.hostname;
+    // Automatically map careerlensai-frontend.onrender.com to careerlensai-backend.onrender.com
+    const backendHost = hostname.replace('-frontend', '-backend');
+    API_BASE_URL = `https://${backendHost}/api/v1`;
+  } else {
+    API_BASE_URL = 'http://localhost:8000/api/v1';
+  }
+} else if (!API_BASE_URL.endsWith('/api/v1')) {
   API_BASE_URL = API_BASE_URL.replace(/\/+$/, '') + '/api/v1';
 }
+
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,

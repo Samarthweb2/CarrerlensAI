@@ -52,8 +52,10 @@ allowed_origins = [
     "http://localhost:5174",
     "http://127.0.0.1:5174",
     "http://localhost:5175",
-    "http://127.0.0.1:5175"
+    "http://127.0.0.1:5175",
+    "https://careerlensai-frontend.onrender.com"
 ]
+
 frontend_url_env = os.environ.get("FRONTEND_URL")
 if frontend_url_env:
     for url in frontend_url_env.split(","):
