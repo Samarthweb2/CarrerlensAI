@@ -10,7 +10,7 @@ def get_user_by_email(db: Session, email: str):
     """
     return db.query(User).filter(User.email == email).first()
 
-def register_user(db: Session, user_data: UserCreate):
+def register_user(db: Session, user_data: UserCreate, background_tasks=None):
     """
     Creates a new user record in database, generates a verification code, and triggers signup emails.
     """
@@ -43,12 +43,16 @@ def register_user(db: Session, user_data: UserCreate):
     db.refresh(new_user)
     
     # Send verification email asynchronously/directly
-    try:
-        email_service.send_verification_otp(new_user.email, new_user.full_name, verification_otp)
-    except Exception as e:
-        print(f"Error sending verification code email: {e}")
+    if background_tasks:
+        background_tasks.add_task(email_service.send_verification_otp, new_user.email, new_user.full_name, verification_otp)
+    else:
+        try:
+            email_service.send_verification_otp(new_user.email, new_user.full_name, verification_otp)
+        except Exception as e:
+            print(f"Error sending verification code email: {e}")
 
     return new_user
+
 
 def authenticate_user(db: Session, login_data: UserLogin):
     """

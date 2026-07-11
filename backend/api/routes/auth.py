@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status, HTTPException
+from fastapi import APIRouter, Depends, status, HTTPException, BackgroundTasks
 from sqlalchemy.orm import Session
 import random
 from database.database import get_db
@@ -19,14 +19,14 @@ router = APIRouter(
 )
 
 @router.post("/signup", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
-async def signup(user_data: UserCreate, db: Session = Depends(get_db)):
+async def signup(user_data: UserCreate, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     """
     Registers a new user candidate account and triggers verification email.
     """
-    return auth_service.register_user(db, user_data)
+    return auth_service.register_user(db, user_data, background_tasks)
 
 @router.post("/verify", status_code=status.HTTP_200_OK)
-async def verify_email(payload: VerifyEmailRequest, db: Session = Depends(get_db)):
+async def verify_email(payload: VerifyEmailRequest, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     """
     Verifies a user's email address using the 6-digit OTP code.
     """
@@ -49,13 +49,17 @@ async def verify_email(payload: VerifyEmailRequest, db: Session = Depends(get_db
     user.verification_code = None
     db.commit()
     
-    # Send Welcome Email
-    try:
-        email_service.send_welcome_email(user.email, user.full_name)
-    except Exception as e:
-        print(f"Error sending welcome email: {e}")
+    # Send Welcome Email via BackgroundTasks
+    if background_tasks:
+        background_tasks.add_task(email_service.send_welcome_email, user.email, user.full_name)
+    else:
+        try:
+            email_service.send_welcome_email(user.email, user.full_name)
+        except Exception as e:
+            print(f"Error sending welcome email: {e}")
         
     return {"status": "success", "message": "Email verified successfully! You can now log in."}
+
 
 @router.post("/login", response_model=TokenResponse)
 async def login(login_data: UserLogin, db: Session = Depends(get_db)):
@@ -74,7 +78,7 @@ async def login(login_data: UserLogin, db: Session = Depends(get_db)):
     }
 
 @router.post("/forgot-password", status_code=status.HTTP_200_OK)
-async def forgot_password(payload: ForgotPasswordRequest, db: Session = Depends(get_db)):
+async def forgot_password(payload: ForgotPasswordRequest, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     """
     Initiates password reset process by emailing a 6-digit verification code.
     """
@@ -87,12 +91,16 @@ async def forgot_password(payload: ForgotPasswordRequest, db: Session = Depends(
     user.reset_token = reset_otp
     db.commit()
     
-    try:
-        email_service.send_password_reset(user.email, user.full_name, reset_otp)
-    except Exception as e:
-        print(f"Error sending password reset email: {e}")
+    if background_tasks:
+        background_tasks.add_task(email_service.send_password_reset, user.email, user.full_name, reset_otp)
+    else:
+        try:
+            email_service.send_password_reset(user.email, user.full_name, reset_otp)
+        except Exception as e:
+            print(f"Error sending password reset email: {e}")
         
     return {"status": "success", "message": "Password reset code sent successfully."}
+
 
 @router.post("/reset-password", status_code=status.HTTP_200_OK)
 async def reset_password(payload: ResetPasswordRequest, db: Session = Depends(get_db)):

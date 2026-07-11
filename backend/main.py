@@ -34,6 +34,24 @@ try:
                 conn.execute(text(f"ALTER TABLE users ADD COLUMN {col_name} {col_type}"))
             except Exception:
                 pass
+        # JobRoles columns
+        for col_name, col_type in [
+            ("company", "TEXT"),
+            ("location", "TEXT"),
+            ("description", "TEXT"),
+            ("required_skills", "JSON"),
+            ("preferred_skills", "JSON"),
+            ("experience_level", "TEXT"),
+            ("salary_min", "INTEGER"),
+            ("salary_max", "INTEGER"),
+            ("work_type", "TEXT"),
+            ("ats_keywords", "JSON")
+        ]:
+            try:
+                conn.execute(text(f"ALTER TABLE job_roles ADD COLUMN {col_name} {col_type}"))
+            except Exception:
+                pass
+
 except Exception as migration_err:
     print(f"Migration warning: {migration_err}")
 
