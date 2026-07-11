@@ -111,6 +111,7 @@ export default function RobotIllustration({ activeField, status }) {
             
             {/* Left Arm */}
             <motion.path
+              d={leftArmD}
               animate={{ d: leftArmD }}
               transition={{ duration: 0.2 }}
               stroke={faceColor}
@@ -120,6 +121,7 @@ export default function RobotIllustration({ activeField, status }) {
 
             {/* Right Arm */}
             <motion.path
+              d={rightArmD}
               animate={{ d: rightArmD }}
               transition={{ duration: 0.2 }}
               stroke={faceColor}

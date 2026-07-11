@@ -1,0 +1,105 @@
+# ===========================================================================
+# CareerLensAI — Render Blueprint (render.yaml)
+# ===========================================================================
+# This file defines the ENTIRE infrastructure for CareerLensAI on Render:
+#   1. PostgreSQL Database
+#   2. FastAPI Backend (Python Web Service)
+#   3. React Frontend (Static Site)
+#
+# HOW TO DEPLOY:
+#   1. Push this file to your GitHub repo root
+#   2. Go to https://dashboard.render.com/select-repo?type=blueprint
+#   3. Select your CarrerlensAI repo
+#   4. Render auto-detects this file and provisions everything
+#   5. Set GEMINI_API_KEY in the Render dashboard when prompted
+#   6. After first deploy, copy the frontend static site URL and set it
+#      as FRONTEND_URL on the backend service in the Render dashboard
+# ===========================================================================
+
+databases:
+  - name: careerlens-db
+    plan: free
+    databaseName: careerlens
+    user: careerlens_user
+    region: oregon
+
+services:
+  # =========================================================================
+  # BACKEND — FastAPI Python Web Service
+  # =========================================================================
+  - type: web
+    name: careerlensai-backend
+    runtime: python
+    region: oregon
+    plan: free
+    branch: main
+    rootDir: backend
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /
+    autoDeploy: true
+    envVars:
+      # Database — auto-linked from the PostgreSQL instance above
+      - key: DATABASE_URL
+        fromDatabase:
+          name: careerlens-db
+          property: connectionString
+      # JWT Authentication Secret — auto-generated securely
+      - key: JWT_SECRET
+        generateValue: true
+      # Google Gemini AI API Key (set in Render dashboard when prompted)
+      - key: GEMINI_API_KEY
+        sync: false
+      # Python version
+      - key: PYTHON_VERSION
+        value: "3.11.12"
+      # Frontend URL for CORS — set this after first deploy
+      # Copy the frontend static site URL from Render dashboard
+      - key: FRONTEND_URL
+        sync: false
+      # SMTP Email (optional — set in Render dashboard if needed)
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+
+  # =========================================================================
+  # FRONTEND — React/Vite Static Site
+  # =========================================================================
+  - type: web
+    name: careerlensai-frontend
+    runtime: static
+    region: oregon
+    branch: main
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    autoDeploy: true
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+    routes:
+      # SPA fallback — all paths serve index.html for client-side routing
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      # Vite injects this at BUILD TIME into the frontend bundle
+      # Reference the backend's own RENDER_EXTERNAL_URL so the frontend
+      # knows where the API lives
+      - key: VITE_API_URL
+        fromService:
+          name: careerlensai-backend
+          type: web
+          envVarKey: RENDER_EXTERNAL_URL

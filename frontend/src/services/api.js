@@ -1,7 +1,12 @@
 import axios from 'axios';
 
 // Configure FastAPI Base URL
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
+// Handles both full URLs (e.g. https://x.onrender.com/api/v1) and
+// raw domain URLs from Render's RENDER_EXTERNAL_URL (e.g. https://x.onrender.com)
+let API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
+if (API_BASE_URL && !API_BASE_URL.endsWith('/api/v1')) {
+  API_BASE_URL = API_BASE_URL.replace(/\/+$/, '') + '/api/v1';
+}
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
