@@ -31,9 +31,31 @@ def analyze_resume_text(parsed_resume: Dict[str, Any], job_description: Optional
     if db:
         try:
             user_skills = set([s.lower() for s in parsed_resume.get("skills", [])])
-            roles = db.query(JobRole).all()
-            scored_roles = []
             
+            # Prevent RAM overflow (OOM crash) on Render's 512MB RAM container:
+            # Query only required columns and limit results using a dynamic LIKE filter on user's top skills
+            from sqlalchemy import or_
+            filters = []
+            # Match top 15 skills to keep database index/scan search space small and fast
+            for skill in list(user_skills)[:15]:
+                clean_sk = skill.replace('"', '').replace('%', '') # sanitize input
+                filters.append(JobRole.required_skills.like(f'%"{clean_sk}"%'))
+                filters.append(JobRole.ats_keywords.like(f'%"{clean_sk}"%'))
+
+            if filters:
+                roles = db.query(
+                    JobRole.title, JobRole.company, JobRole.location, JobRole.industry,
+                    JobRole.description, JobRole.required_skills, JobRole.preferred_skills,
+                    JobRole.salary_min, JobRole.salary_max, JobRole.work_type, JobRole.ats_keywords
+                ).filter(or_(*filters)).limit(2000).all()
+            else:
+                roles = db.query(
+                    JobRole.title, JobRole.company, JobRole.location, JobRole.industry,
+                    JobRole.description, JobRole.required_skills, JobRole.preferred_skills,
+                    JobRole.salary_min, JobRole.salary_max, JobRole.work_type, JobRole.ats_keywords
+                ).limit(200).all()
+                
+            scored_roles = []
             for r in roles:
                 # Combine required skills and ATS keywords for matching
                 role_skills = set([s.lower() for s in (r.required_skills or [])] + [s.lower() for s in (r.ats_keywords or [])])
@@ -46,6 +68,7 @@ def analyze_resume_text(parsed_resume: Dict[str, Any], job_description: Optional
                 # Boost match score for better UI visibility (e.g. min 40, max 99)
                 match_score = min(int(base_score * 1.5 + 40), 99) if overlap > 0 else 0
                 scored_roles.append((match_score, r))
+
                 
             # Sort by highest score
             scored_roles.sort(key=lambda x: x[0], reverse=True)
