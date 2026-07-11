@@ -28,12 +28,7 @@ def register_user(db: Session, user_data: UserCreate):
 
     # Hash the password
     hashed_pwd = hash_password(user_data.password)
-    
-    # Use fixed OTP 123456 if SMTP is not configured, otherwise random
-    if not os.environ.get("SMTP_HOST"):
-        verification_otp = "123456"
-    else:
-        verification_otp = f"{random.randint(100000, 999999)}"
+    verification_otp = f"{random.randint(100000, 999999)}"
 
     new_user = User(
         full_name=user_data.full_name,
