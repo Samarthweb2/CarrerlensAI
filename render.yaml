@@ -73,7 +73,6 @@ services:
   - type: web
     name: careerlensai-frontend
     runtime: static
-    region: oregon
     branch: main
     rootDir: frontend
     buildCommand: npm install && npm run build
