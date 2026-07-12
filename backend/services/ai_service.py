@@ -134,18 +134,35 @@ def analyze_resume_text(parsed_resume: Dict[str, Any], job_description: Optional
         except Exception as e:
             logger.error(f"Failed to match against Job Knowledge Base: {e}")
 
-    if GEMINI_API_KEY:
-        try:
-            result = analyze_resume_with_gemini(parsed_resume, target_jd, missing_skills_from_db, top_matches_text)
-            if job_matches:
-                result["jobMatches"] = job_matches
-            return result
-        except Exception as e:
-            logger.error(f"Gemini API analysis failed: {e}. Falling back to heuristic mapping.")
-            
+    # 1. Compute baseline heuristics first
     result = analyze_resume_with_heuristics(parsed_resume, target_jd)
     if job_matches:
         result["jobMatches"] = job_matches
+
+    # 2. If GEMINI_API_KEY is present, overlay Gemini results on top of baseline
+    if GEMINI_API_KEY:
+        try:
+            gemini_result = analyze_resume_with_gemini(parsed_resume, target_jd, missing_skills_from_db, top_matches_text)
+            
+            # Defensive copy & conversion
+            for key in ["atsScore", "resumeScore", "formatting", "grammar", "keywords"]:
+                if key in gemini_result and isinstance(gemini_result[key], (int, float)):
+                    result[key] = int(gemini_result[key])
+                    
+            for key in ["skillsFound", "missingSkills", "suggestions", "improvements", "interviewQuestions", "roadmap"]:
+                if key in gemini_result and isinstance(gemini_result[key], list):
+                    result[key] = gemini_result[key]
+                    
+            for key in ["sectionScores", "keywordMatch"]:
+                if key in gemini_result and isinstance(gemini_result[key], dict):
+                    result[key].update(gemini_result[key])
+                    
+            if "jobMatches" in gemini_result and isinstance(gemini_result["jobMatches"], list) and gemini_result["jobMatches"]:
+                result["jobMatches"] = gemini_result["jobMatches"]
+                
+        except Exception as e:
+            logger.error(f"Gemini API analysis failed: {e}. Falling back to baseline heuristics.")
+            
     return result
 
 def analyze_resume_with_gemini(
