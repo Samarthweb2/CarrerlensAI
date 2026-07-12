@@ -34,13 +34,13 @@ def analyze_resume_text(parsed_resume: Dict[str, Any], job_description: Optional
             
             # Prevent RAM overflow (OOM crash) on Render's 512MB RAM container:
             # Query only required columns and limit results using a dynamic LIKE filter on user's top skills
-            from sqlalchemy import or_
+            from sqlalchemy import or_, cast, String
             filters = []
             # Match top 15 skills to keep database index/scan search space small and fast
             for skill in list(user_skills)[:15]:
                 clean_sk = skill.replace('"', '').replace('%', '') # sanitize input
-                filters.append(JobRole.required_skills.like(f'%"{clean_sk}"%'))
-                filters.append(JobRole.ats_keywords.like(f'%"{clean_sk}"%'))
+                filters.append(cast(JobRole.required_skills, String).like(f'%"{clean_sk}"%'))
+                filters.append(cast(JobRole.ats_keywords, String).like(f'%"{clean_sk}"%'))
 
             if filters:
                 roles = db.query(
@@ -133,6 +133,10 @@ def analyze_resume_text(parsed_resume: Dict[str, Any], job_description: Optional
                 
         except Exception as e:
             logger.error(f"Failed to match against Job Knowledge Base: {e}")
+            try:
+                db.rollback()
+            except Exception:
+                pass
 
     # 1. Compute baseline heuristics first
     result = analyze_resume_with_heuristics(parsed_resume, target_jd)
