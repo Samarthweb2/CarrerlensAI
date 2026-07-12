@@ -22,7 +22,14 @@ Base.metadata.create_all(bind=engine)
 # Run raw SQL migrations to safely add new columns to SQLite/PostgreSQL tables if they don't exist
 try:
     # Analyses columns
-    for col_name, col_type in [("job_description", "TEXT"), ("improvements", "JSON"), ("interview_questions", "JSON")]:
+    for col_name, col_type in [
+        ("job_description", "TEXT"),
+        ("improvements", "JSON"),
+        ("interview_questions", "JSON"),
+        ("keyword_match", "JSON"),
+        ("roadmap", "JSON"),
+        ("job_matches", "JSON")
+    ]:
         try:
             with engine.begin() as conn:
                 conn.execute(text(f"ALTER TABLE analyses ADD COLUMN {col_name} {col_type}"))
