@@ -156,7 +156,7 @@ export default function DashboardLayout({ data = {}, onNavigate }) {
                   <AnalyticsSection historyData={data.historyData} />
                   
                   {/* PDF paper weaknesses review previews */}
-                  <ResumePreview fileName={data.fileName} />
+                  <ResumePreview fileName={data.fileName} parsedResume={data.parsedResume} />
 
                   {/* PDF offline sharing triggers */}
                   <ExportActions

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export default function ResumePreview({ fileName = "Resume.pdf" }) {
+export default function ResumePreview({ fileName = "Resume.pdf", parsedResume = null }) {
   const [activeWeakness, setActiveWeakness] = useState(null);
 
   const weaknesses = [
@@ -18,6 +18,26 @@ export default function ResumePreview({ fileName = "Resume.pdf" }) {
       top: '52%'
     }
   ];
+
+  // Destructure parsedResume with dynamic fallbacks
+  const {
+    name = "Candidate Name",
+    email = "email@example.com",
+    phone = "",
+    links = {},
+    education = [],
+    experience = [],
+    projects = [],
+    skills = [],
+    certifications = []
+  } = parsedResume || {};
+
+  const contactInfo = [
+    email,
+    phone,
+    links.linkedin ? `LinkedIn: ${links.linkedin}` : '',
+    links.github ? `GitHub: ${links.github}` : ''
+  ].filter(Boolean).join(' • ');
 
   return (
     <div className="bg-white border-3 border-text p-6 sm:p-8 rounded-3xl shadow-[6px_6px_0px_#1F1F1F] select-none text-left w-full flex flex-col h-full min-h-[500px]">
@@ -38,8 +58,8 @@ export default function ResumePreview({ fileName = "Resume.pdf" }) {
         
         {/* Contact Info Header */}
         <div className="text-center mb-6">
-          <h4 className="text-sm font-extrabold text-text">Samarth Mishra</h4>
-          <p className="text-text-muted text-[10px] font-bold">samarth@example.com • +91 98765 43210 • LinkedIn / GitHub</p>
+          <h4 className="text-sm font-extrabold text-text">{name}</h4>
+          <p className="text-text-muted text-[10px] font-bold">{contactInfo}</p>
         </div>
 
         {/* Summary block with weakness trigger */}
@@ -51,48 +71,65 @@ export default function ResumePreview({ fileName = "Resume.pdf" }) {
           <div className="absolute left-0 top-0 bottom-0 w-1 bg-accent-orange rounded" />
           <h5 className="font-extrabold text-text uppercase tracking-wider mb-1 text-[10px]">Professional Summary</h5>
           <p className="text-text-muted">
-            Motivated computer science student and aspiring Data Analyst with strong problem solving abilities. Experienced in Python, SQL, and database analysis. Dedicated team worker with a self-starter mindset who thrives under fast environments.
+            Motivated professional with strong skills in {skills.slice(0, 5).join(', ')}. Detail-oriented team worker who thrives in fast-paced software development and technology environments.
           </p>
         </div>
 
         {/* Education block */}
-        <div className="mb-6">
-          <h5 className="font-extrabold text-text uppercase tracking-wider mb-1.5 text-[10px]">Education</h5>
-          <div className="flex justify-between items-center mb-1 font-bold">
-            <span className="text-text">B.Tech in Computer Science - XYZ University</span>
-            <span className="text-text-muted text-[10px]">2023 - Present</span>
-          </div>
-          <p className="text-text-muted">CGPA: 9.1/10.0</p>
-        </div>
-
-        {/* Experience block with weakness trigger */}
-        <div
-          className="mb-6 cursor-pointer relative group border-2 border-transparent hover:border-accent-orange/40 hover:bg-accent-orange/5 p-1.5 rounded transition-all"
-          onClick={() => setActiveWeakness('experience')}
-        >
-          <div className="absolute left-0 top-0 bottom-0 w-1 bg-accent-orange rounded" />
-          <h5 className="font-extrabold text-text uppercase tracking-wider mb-1.5 text-[10px]">Projects & Experience</h5>
-          
-          <div className="mb-2">
-            <div className="flex justify-between items-center mb-1 font-bold">
-              <span className="text-text">Data Analysis Internship - CareerLens</span>
-              <span className="text-text-muted text-[10px]">May 2026 - Present</span>
-            </div>
+        {education.length > 0 && (
+          <div className="mb-6">
+            <h5 className="font-extrabold text-text uppercase tracking-wider mb-1.5 text-[10px]">Education</h5>
             <ul className="list-disc pl-4 text-text-muted flex flex-col gap-1">
-              <li>Responsible for parsing database records and developing internal reports.</li>
-              <li>Wrote Python queries to scrape dataset endpoints.</li>
-              <li>Collaborated with team developers to review code pipelines.</li>
+              {education.map((item, idx) => (
+                <li key={idx}>{item}</li>
+              ))}
             </ul>
           </div>
-        </div>
+        )}
+
+        {/* Experience block with weakness trigger */}
+        {(experience.length > 0 || projects.length > 0) && (
+          <div
+            className="mb-6 cursor-pointer relative group border-2 border-transparent hover:border-accent-orange/40 hover:bg-accent-orange/5 p-1.5 rounded transition-all"
+            onClick={() => setActiveWeakness('experience')}
+          >
+            <div className="absolute left-0 top-0 bottom-0 w-1 bg-accent-orange rounded" />
+            <h5 className="font-extrabold text-text uppercase tracking-wider mb-1.5 text-[10px]">Projects & Experience</h5>
+            
+            <div className="mb-2">
+              <ul className="list-disc pl-4 text-text-muted flex flex-col gap-1">
+                {experience.slice(0, 4).map((item, idx) => (
+                  <li key={`exp-${idx}`}>{item}</li>
+                ))}
+                {projects.slice(0, 4).map((item, idx) => (
+                  <li key={`proj-${idx}`}>{item}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        )}
 
         {/* Skills block */}
-        <div className="mb-4">
-          <h5 className="font-extrabold text-text uppercase tracking-wider mb-1 text-[10px]">Skills</h5>
-          <p className="text-text-muted">
-            Python, SQL, React, Power BI, Pandas, NumPy, HTML, CSS, JavaScript
-          </p>
-        </div>
+        {skills.length > 0 && (
+          <div className="mb-4">
+            <h5 className="font-extrabold text-text uppercase tracking-wider mb-1 text-[10px]">Skills</h5>
+            <p className="text-text-muted">
+              {skills.join(', ')}
+            </p>
+          </div>
+        )}
+
+        {/* Certifications block */}
+        {certifications.length > 0 && (
+          <div className="mb-4">
+            <h5 className="font-extrabold text-text uppercase tracking-wider mb-1.5 text-[10px]">Certifications</h5>
+            <ul className="list-disc pl-4 text-text-muted flex flex-col gap-1">
+              {certifications.map((item, idx) => (
+                <li key={idx}>{item}</li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         {/* Active Weakness details balloon overlay */}
         <AnimatePresence>

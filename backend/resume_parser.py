@@ -158,6 +158,19 @@ def extract_section_content(text: str, section_name: str) -> List[str]:
             
     return content_lines
 
+def extract_name(text: str) -> Optional[str]:
+    """
+    Heuristically extracts candidate name from the top of the resume text.
+    """
+    lines = [line.strip() for line in text.split('\n') if line.strip()]
+    for line in lines[:5]:
+        if "@" in line or any(p in line.lower() for p in ["+", "phone", "email", "github", "linkedin", "resume", "cv"]):
+            continue
+        words = line.split()
+        if 2 <= len(words) <= 4 and all(part[0].isupper() for part in words if part.isalpha()):
+            return line
+    return None
+
 def parse_resume_to_json(file_path: str, filename: str) -> Dict[str, Any]:
     """
     Main parser coordinator. Extracts text and segments it into structured JSON fields.
@@ -174,9 +187,14 @@ def parse_resume_to_json(file_path: str, filename: str) -> Dict[str, Any]:
     skills = extract_skills_keywords(raw_text)
     certifications = extract_section_content(raw_text, "certifications")
     
+    extracted_name = extract_name(raw_text)
+    
     return {
         "fileId": str(os.path.basename(file_path).split('_')[0]),
         "fileName": filename,
+        "name": extracted_name or "Candidate Name",
+        "email": email,
+        "phone": phone,
         "text": raw_text,
         "education": education,
         "experience": experience,

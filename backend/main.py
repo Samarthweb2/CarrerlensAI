@@ -28,7 +28,8 @@ try:
         ("interview_questions", "JSON"),
         ("keyword_match", "JSON"),
         ("roadmap", "JSON"),
-        ("job_matches", "JSON")
+        ("job_matches", "JSON"),
+        ("parsed_resume", "JSON")
     ]:
         try:
             with engine.begin() as conn:

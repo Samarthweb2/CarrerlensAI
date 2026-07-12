@@ -128,7 +128,8 @@ async def upload_resume(
             job_matches=analysis_data["jobMatches"],
             job_description=job_description,
             improvements=analysis_data.get("improvements", []),
-            interview_questions=analysis_data.get("interviewQuestions", [])
+            interview_questions=analysis_data.get("interviewQuestions", []),
+            parsed_resume=parsed_data
         )
         
         db.add(db_analysis)

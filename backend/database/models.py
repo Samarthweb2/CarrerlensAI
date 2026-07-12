@@ -56,6 +56,7 @@ class Analysis(Base):
     job_description = Column(String, nullable=True)
     improvements = Column(JSON, nullable=True)
     interview_questions = Column(JSON, nullable=True)
+    parsed_resume = Column(JSON, nullable=True)
     
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 

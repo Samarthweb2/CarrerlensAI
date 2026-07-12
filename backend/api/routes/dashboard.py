@@ -167,5 +167,16 @@ async def get_dashboard_data(
         "historyData": history_data,
         "jobDescription": getattr(analysis, "job_description", None),
         "improvements": getattr(analysis, "improvements", []) or [],
-        "interviewQuestions": getattr(analysis, "interview_questions", []) or []
+        "interviewQuestions": getattr(analysis, "interview_questions", []) or [],
+        "parsedResume": getattr(analysis, "parsed_resume", None) or {
+            "name": current_user.full_name,
+            "email": current_user.email,
+            "phone": None,
+            "links": {"github": None, "linkedin": None},
+            "education": [],
+            "experience": [],
+            "projects": [],
+            "skills": analysis.skills_found,
+            "certifications": []
+        }
     }
