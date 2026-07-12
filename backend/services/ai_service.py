@@ -239,17 +239,16 @@ def analyze_resume_with_gemini(
             "density": "4.2%" // string representing keyword repetition density
         }},
         "roadmap": [
-            {{"title": "Student", "completed": true, "desc": "Foundational coursework & project building"}},
-            {{"title": "Junior Analyst", "completed": true, "desc": "Data cleaning, reporting & SQL wrangling"}},
-            {{"title": "Data Analyst", "completed": true, "desc": "Dashboards, statistical tests & business reviews"}},
-            {{"title": "Senior Analyst", "completed": false, "desc": "Predictive models, pipeline architecture & coaching"}},
-            {{"title": "Analytics Engineer", "completed": false, "desc": "dbt orchestration, warehousing & analytics pipelines"}},
-            {{"title": "AI Engineer", "completed": false, "desc": "LLMs tuning, agent systems & microservice deployments"}}
-        ], // 6 milestone items displaying the candidate's career progression path
+            {{"title": "Student / Foundational", "completed": true, "desc": "Acquired core programming or field-specific skills"}},
+            {{"title": "Junior Engineer / Analyst", "completed": true, "desc": "Initial role details"}},
+            {{"title": "Mid-Level Professional", "completed": true, "desc": "Next milestone details"}},
+            {{"title": "Senior Professional", "completed": false, "desc": "Advanced role details"}},
+            {{"title": "Lead / Architect", "completed": false, "desc": "Technical lead or specialty lead details"}},
+            {{"title": "VP / Director / CTO", "completed": false, "desc": "Executive or principal lead details"}}
+        ], // 6 milestone items dynamically tailored to the candidate's actual target field (e.g. if their skills are frontend-focused, output frontend developer milestones; if data science, output data science milestones).
         "jobMatches": [
-            {{"company": "Google", "role": "Associate Data Analyst", "match": 92, "salary": "₹18–24 LPA", "location": "Bangalore", "logo": "G", "color": "#4285F4"}},
-            {{"company": "Microsoft", "role": "Data Engineer I", "match": 89, "salary": "₹20–26 LPA", "location": "Hyderabad", "logo": "M", "color": "#F25022"}}
-        ] // list of job recommendation objects
+            {{"company": "Google", "role": "Software Engineer I", "match": 92, "salary": "₹18–24 LPA", "location": "Bangalore", "logo": "G", "color": "#4285F4"}}
+        ] // list of job recommendation objects dynamically matching their profile
     }}
     
     Strict constraints:
@@ -325,28 +324,95 @@ def analyze_resume_with_heuristics(parsed_resume: Dict[str, Any], job_descriptio
         suggestions.append("Ensure your Education section explicitly lists your degree, university, and graduation year.")
     if len(skills) < 5:
         suggestions.append("List more technical skill keywords matching target job descriptions.")
-    
+        
+    # Determine candidate domain based on skills
+    skills_lower = [s.lower() for s in skills]
+    is_frontend = any(x in skills_lower for x in ["react", "html", "css", "javascript", "js", "vue", "angular", "frontend", "ui", "ux", "web design"])
+    is_backend_or_devops = any(x in skills_lower for x in ["node.js", "node", "express", "fastapi", "django", "flask", "backend", "docker", "kubernetes", "aws", "gcp", "azure", "ci/cd", "devops", "cloud"])
+    is_data = any(x in skills_lower for x in ["python", "sql", "pandas", "numpy", "power bi", "tableau", "spark", "hadoop", "machine learning", "ml", "nlp", "data science", "data analyst"])
+
     if len(suggestions) < 3:
-        suggestions.extend([
-            "Tailor your professional summary to emphasize analytical skillsets.",
-            "Detail target internship or freelance experience to expand proof of work."
-        ])
-    
-    roadmap = [
-        {"title": "Student", "completed": True, "desc": "Foundational coursework & project building"},
-        {"title": "Junior Analyst", "completed": True, "desc": "Data cleaning, reporting & SQL wrangling"},
-        {"title": "Data Analyst", "completed": ats_score >= 70, "desc": "Dashboards, statistical tests & business reviews"},
-        {"title": "Senior Analyst", "completed": False, "desc": "Predictive models, pipeline architecture & coaching"},
-        {"title": "Analytics Engineer", "completed": False, "desc": "dbt orchestration, warehousing & analytics pipelines"},
-        {"title": "AI Engineer", "completed": False, "desc": "LLMs tuning, agent systems & microservice deployments"}
-    ]
-    
-    job_matches = [
-        {"company": "Google", "role": "Associate Data Analyst", "match": min(ats_score + 1, 99), "salary": "₹18–24 LPA", "location": "Bangalore", "logo": "G", "color": "#4285F4"},
-        {"company": "Microsoft", "role": "Data Engineer I", "match": min(ats_score - 2, 99), "salary": "₹20–26 LPA", "location": "Hyderabad", "logo": "M", "color": "#F25022"},
-        {"company": "Amazon", "role": "Business Intelligence Eng", "match": min(ats_score - 4, 99), "salary": "₹16–22 LPA", "location": "Chennai", "logo": "A", "color": "#FF9900"},
-        {"company": "Infosys", "role": "Systems Engineer", "match": min(ats_score + 5, 99), "salary": "₹8–12 LPA", "location": "Pune", "logo": "I", "color": "#007CC3"}
-    ]
+        if is_frontend:
+            suggestions.extend([
+                "Tailor your professional summary to emphasize modern frontend framework expertise (React/Vue/Angular).",
+                "Detail target web optimization or client-side performance experience to expand proof of work."
+            ])
+        elif is_backend_or_devops:
+            suggestions.extend([
+                "Tailor your professional summary to emphasize API scaling and database query optimizations.",
+                "Detail cloud hosting or deployment pipeline automations to expand proof of work."
+            ])
+        elif is_data:
+            suggestions.extend([
+                "Tailor your professional summary to emphasize statistical analyses and database reporting skills.",
+                "Detail target BI dashboarding or data wrangling projects to expand proof of work."
+            ])
+        else:
+            suggestions.extend([
+                "Tailor your professional summary to emphasize software design principles and code cleanliness.",
+                "Detail target application development or system designs to expand proof of work."
+            ])
+            
+    if is_frontend:
+        roadmap = [
+            {"title": "Student", "completed": True, "desc": "HTML, CSS, JS foundations & clean UI layouts"},
+            {"title": "Junior Frontend Dev", "completed": True, "desc": "Modern JS/TS, UI components & basic SPA state management"},
+            {"title": "Frontend Engineer", "completed": ats_score >= 70, "desc": "React/Vue/Angular development, state stores & styling frameworks"},
+            {"title": "Senior Frontend Engineer", "completed": False, "desc": "Web performance tuning, bundle optimization, security & caching patterns"},
+            {"title": "Frontend Architect", "completed": False, "desc": "Design systems creation, micro-frontends architecture & build tooling configs"},
+            {"title": "VP of Engineering", "completed": False, "desc": "Technical leadership, department alignment, hiring & CTO pathway"}
+        ]
+        job_matches = [
+            {"company": "Google", "role": "Frontend Developer", "match": min(ats_score + 1, 99), "salary": "₹18–24 LPA", "location": "Bangalore", "logo": "G", "color": "#4285F4"},
+            {"company": "Vercel", "role": "React Engineer", "match": min(ats_score - 2, 99), "salary": "₹22–28 LPA", "location": "Remote", "logo": "V", "color": "#000000"},
+            {"company": "Meta", "role": "UI Engineer", "match": min(ats_score - 4, 99), "salary": "₹20–26 LPA", "location": "Hyderabad", "logo": "M", "color": "#1877F2"},
+            {"company": "Infosys", "role": "Systems Engineer (Web)", "match": min(ats_score + 5, 99), "salary": "₹8–12 LPA", "location": "Pune", "logo": "I", "color": "#007CC3"}
+        ]
+    elif is_backend_or_devops:
+        roadmap = [
+            {"title": "Student", "completed": True, "desc": "Basic CLI scripts, HTTP requests & simple server building"},
+            {"title": "Junior Backend Dev", "completed": True, "desc": "APIs endpoints writing, basic SQL database queries & git controls"},
+            {"title": "Backend Engineer", "completed": ats_score >= 70, "desc": "FastAPI/Node microservices, indexing, ORMs & auth systems implementation"},
+            {"title": "Senior Backend Engineer", "completed": False, "desc": "Distributed systems, queues, caching stores (Redis) & architecture designs"},
+            {"title": "Cloud / DevOps Lead", "completed": False, "desc": "Kubernetes setups, CI/CD automation pipelines & high-availability hosting"},
+            {"title": "VP of Technology / CTO", "completed": False, "desc": "Strategic technology decisions, scalability oversight & leadership"}
+        ]
+        job_matches = [
+            {"company": "AWS", "role": "Backend Cloud Engineer", "match": min(ats_score + 1, 99), "salary": "₹20–26 LPA", "location": "Bangalore", "logo": "A", "color": "#FF9900"},
+            {"company": "Stripe", "role": "API Integration Engineer", "match": min(ats_score - 2, 99), "salary": "₹24–30 LPA", "location": "Bangalore", "logo": "S", "color": "#635BFF"},
+            {"company": "Microsoft", "role": "DevOps Engineer I", "match": min(ats_score - 4, 99), "salary": "₹20–26 LPA", "location": "Hyderabad", "logo": "M", "color": "#F25022"},
+            {"company": "TCS", "role": "Systems Analyst", "match": min(ats_score + 5, 99), "salary": "₹8–12 LPA", "location": "Chennai", "logo": "T", "color": "#002C77"}
+        ]
+    elif is_data:
+        roadmap = [
+            {"title": "Student", "completed": True, "desc": "Foundational Python, SQL basics & spreadsheets statistics"},
+            {"title": "Junior Analyst", "completed": True, "desc": "Data wrangling, SQL joins, basic reports & dashboards"},
+            {"title": "Data Analyst", "completed": ats_score >= 70, "desc": "Advanced SQL, BI tools (Power BI), KPIs & statistical evaluations"},
+            {"title": "Senior Analyst", "completed": False, "desc": "Predictive analytics models, warehouse modeling (dbt) & business insights"},
+            {"title": "Analytics Engineer", "completed": False, "desc": "ELT pipelines orchestrations, warehouse optimization & modeling standards"},
+            {"title": "AI Engineer / Data Scientist", "completed": False, "desc": "Machine Learning training, LLM fine-tuning, neural nets & production serving"}
+        ]
+        job_matches = [
+            {"company": "Google", "role": "Associate Data Analyst", "match": min(ats_score + 1, 99), "salary": "₹18–24 LPA", "location": "Bangalore", "logo": "G", "color": "#4285F4"},
+            {"company": "Microsoft", "role": "Data Engineer I", "match": min(ats_score - 2, 99), "salary": "₹20–26 LPA", "location": "Hyderabad", "logo": "M", "color": "#F25022"},
+            {"company": "Amazon", "role": "Business Intelligence Eng", "match": min(ats_score - 4, 99), "salary": "₹16–22 LPA", "location": "Chennai", "logo": "A", "color": "#FF9900"},
+            {"company": "Infosys", "role": "Systems Engineer", "match": min(ats_score + 5, 99), "salary": "₹8–12 LPA", "location": "Pune", "logo": "I", "color": "#007CC3"}
+        ]
+    else:
+        roadmap = [
+            {"title": "Student", "completed": True, "desc": "Programming fundamentals, basic algorithms & programming tools"},
+            {"title": "Junior Software Eng", "completed": True, "desc": "Writing clean code, debugging, Git operations & task completions"},
+            {"title": "Software Engineer", "completed": ats_score >= 70, "desc": "Feature development, unit tests, code reviews & design implementation"},
+            {"title": "Senior Software Eng", "completed": False, "desc": "System architecture, API design, security patterns & mentoring team"},
+            {"title": "Tech Lead / Architect", "completed": False, "desc": "Large-scale systems design, technology stack decisions & technical specs"},
+            {"title": "CTO / Director of Eng", "completed": False, "desc": "Strategic roadmap planning, engineering team management & tech vision"}
+        ]
+        job_matches = [
+            {"company": "Google", "role": "Software Engineer I", "match": min(ats_score + 1, 99), "salary": "₹18–25 LPA", "location": "Bangalore", "logo": "G", "color": "#4285F4"},
+            {"company": "Microsoft", "role": "Software Engineer I", "match": min(ats_score - 2, 99), "salary": "₹20–26 LPA", "location": "Hyderabad", "logo": "M", "color": "#F25022"},
+            {"company": "Apple", "role": "Applications Engineer", "match": min(ats_score - 4, 99), "salary": "₹22–28 LPA", "location": "Hyderabad", "logo": "A", "color": "#555555"},
+            {"company": "Cognizant", "role": "Programmer Analyst", "match": min(ats_score + 5, 99), "salary": "₹8–12 LPA", "location": "Pune", "logo": "C", "color": "#003366"}
+        ]
 
     improvements = [
         {
