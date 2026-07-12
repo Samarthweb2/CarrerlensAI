@@ -60,79 +60,87 @@ async def upload_resume(
         )
 
     # 3. Store unique filename with UUID prefix to prevent collisions
-    unique_filename = f"{uuid.uuid4()}_{filename}"
-    file_path = os.path.join(UPLOAD_DIR, unique_filename)
-    
     try:
-        with open(file_path, "wb") as buffer:
-            buffer.write(file.file.read())
-    except Exception as e:
-        logger.error(f"Failed to save upload locally: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to save uploaded file on server."
+        unique_filename = f"{uuid.uuid4()}_{filename}"
+        file_path = os.path.join(UPLOAD_DIR, unique_filename)
+        
+        try:
+            with open(file_path, "wb") as buffer:
+                buffer.write(file.file.read())
+        except Exception as e:
+            logger.error(f"Failed to save upload locally: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to save uploaded file on server."
+            )
+
+        # 4. Save Resume record in database
+        db_resume = Resume(
+            user_id=current_user.id,
+            filename=filename,
+            filepath=file_path
         )
+        db.add(db_resume)
+        db.commit()
+        db.refresh(db_resume)
 
-    # 4. Save Resume record in database
-    db_resume = Resume(
-        user_id=current_user.id,
-        filename=filename,
-        filepath=file_path
-    )
-    db.add(db_resume)
-    db.commit()
-    db.refresh(db_resume)
+        # 5. Extract text and parse section chunks
+        try:
+            parsed_data = parse_resume_to_json(file_path, filename)
+        except Exception as e:
+            logger.error(f"Parsing failed for {filename}: {e}")
+            # Cleanup
+            if os.path.exists(file_path):
+                os.remove(file_path)
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Failed to extract text or parse the uploaded resume document structure."
+            )
 
-    # 5. Extract text and parse section chunks
-    try:
-        parsed_data = parse_resume_to_json(file_path, filename)
-    except Exception as e:
-        logger.error(f"Parsing failed for {filename}: {e}")
-        # Cleanup
-        if os.path.exists(file_path):
-            os.remove(file_path)
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Failed to extract text or parse the uploaded resume document structure."
+        # 6. Perform dynamic scoring and recommendations via AI analyzer
+        try:
+            analysis_data = analyze_resume_text(parsed_data, job_description, db)
+        except Exception as e:
+            logger.error(f"AI analysis calculation failed: {e}")
+            # Cleanup
+            if os.path.exists(file_path):
+                os.remove(file_path)
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to process resume analysis calculations."
+            )
+
+        # 7. Save Analysis record in database
+        db_analysis = Analysis(
+            resume_id=db_resume.id,
+            user_id=current_user.id,
+            ats_score=analysis_data["atsScore"],
+            resume_score=analysis_data["resumeScore"],
+            formatting=analysis_data["formatting"],
+            grammar=analysis_data["grammar"],
+            keywords=analysis_data["keywords"],
+            skills_found=analysis_data["skillsFound"],
+            missing_skills=analysis_data["missingSkills"],
+            suggestions=analysis_data["suggestions"],
+            section_scores=analysis_data["sectionScores"],
+            keyword_match=analysis_data["keywordMatch"],
+            roadmap=analysis_data["roadmap"],
+            job_matches=analysis_data["jobMatches"],
+            job_description=job_description,
+            improvements=analysis_data.get("improvements", []),
+            interview_questions=analysis_data.get("interviewQuestions", [])
         )
-
-    # 6. Perform dynamic scoring and recommendations via AI analyzer
-    try:
-        analysis_data = analyze_resume_text(parsed_data, job_description, db)
-    except Exception as e:
-        logger.error(f"AI analysis calculation failed: {e}")
-        # Cleanup
-        if os.path.exists(file_path):
-            os.remove(file_path)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to process resume analysis calculations."
-        )
-
-    # 7. Save Analysis record in database
-    db_analysis = Analysis(
-        resume_id=db_resume.id,
-        user_id=current_user.id,
-        ats_score=analysis_data["atsScore"],
-        resume_score=analysis_data["resumeScore"],
-        formatting=analysis_data["formatting"],
-        grammar=analysis_data["grammar"],
-        keywords=analysis_data["keywords"],
-        skills_found=analysis_data["skillsFound"],
-        missing_skills=analysis_data["missingSkills"],
-        suggestions=analysis_data["suggestions"],
-        section_scores=analysis_data["sectionScores"],
-        keyword_match=analysis_data["keywordMatch"],
-        roadmap=analysis_data["roadmap"],
-        job_matches=analysis_data["jobMatches"],
-        job_description=job_description,
-        improvements=analysis_data.get("improvements", []),
-        interview_questions=analysis_data.get("interviewQuestions", [])
-    )
-    
-    db.add(db_analysis)
-    db.commit()
-    db.refresh(db_analysis)
+        
+        db.add(db_analysis)
+        db.commit()
+        db.refresh(db_analysis)
+    except Exception as outer_err:
+        import traceback
+        print("=" * 60)
+        print("UPLOAD ENDPOINT EXCEPTION DETECTED")
+        traceback.print_exc()
+        print("=" * 60)
+        raise outer_err
 
     # 8. Return response
     links_payload = parsed_data.get("links", {})

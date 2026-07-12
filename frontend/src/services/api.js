@@ -6,11 +6,20 @@ import axios from 'axios';
 let API_BASE_URL = import.meta.env.VITE_API_URL;
 
 if (!API_BASE_URL) {
-  if (typeof window !== 'undefined' && window.location.hostname.includes('onrender.com')) {
+  if (typeof window !== 'undefined') {
     const hostname = window.location.hostname;
-    // Automatically map careerlensai-frontend.onrender.com to careerlensai-backend.onrender.com
-    const backendHost = hostname.replace('-frontend', '-backend');
-    API_BASE_URL = `https://${backendHost}/api/v1`;
+    if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
+      if (hostname.includes('onrender.com')) {
+        const backendHost = hostname.replace('-frontend', '-backend');
+        API_BASE_URL = `https://${backendHost}/api/v1`;
+      } else {
+        // Custom domain fallback: map frontend subdomain to backend subdomain if configured consistently
+        const backendHost = hostname.replace('frontend', 'backend').replace('front', 'back');
+        API_BASE_URL = `https://${backendHost}/api/v1`;
+      }
+    } else {
+      API_BASE_URL = 'http://localhost:8000/api/v1';
+    }
   } else {
     API_BASE_URL = 'http://localhost:8000/api/v1';
   }
