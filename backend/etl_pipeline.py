@@ -411,7 +411,7 @@ def _categorize_skill(skill_name_lower):
 
 def standardize_skill_name(name: str) -> str:
     """Standardizes skill names to a single canonical format, avoiding duplicates."""
-    name_clean = name.strip().lower()
+    name_clean = name.strip().lower().replace('\\', '')
     
     # Python variants
     if name_clean in ('python', 'python3', 'python programming', 'py'):
@@ -461,14 +461,39 @@ def standardize_skill_name(name: str) -> str:
     if name_clean in ('llm', 'llms', 'large language models'):
         return 'LLM'
     # HTML/CSS variants
-    if name_clean == 'html': return 'HTML5'
-    if name_clean == 'css': return 'CSS3'
-    if name_clean == 'tailwind': return 'Tailwind CSS'
+    if name_clean in ('html', 'html5'): return 'HTML5'
+    if name_clean in ('css', 'css3'): return 'CSS3'
+    if name_clean in ('tailwind', 'tailwind css'): return 'Tailwind CSS'
+    if name_clean in ('postgres', 'postgresql'): return 'PostgreSQL'
+    if name_clean in ('mongo', 'mongodb'): return 'MongoDB'
+    if name_clean in ('power bi', 'powerbi'): return 'Power BI'
+    if name_clean in ('tableau',): return 'Tableau'
+    if name_clean in ('docker',): return 'Docker'
+    if name_clean in ('kubernetes', 'k8s'): return 'Kubernetes'
+    if name_clean in ('terraform',): return 'Terraform'
+    if name_clean in ('ansible',): return 'Ansible'
+    if name_clean in ('jenkins',): return 'Jenkins'
+    if name_clean in ('fastapi',): return 'FastAPI'
+    if name_clean in ('flask',): return 'Flask'
+    if name_clean in ('django',): return 'Django'
+    if name_clean in ('express', 'express.js'): return 'Express'
+    if name_clean in ('spring', 'spring boot'): return 'Spring'
+    if name_clean in ('graphql',): return 'GraphQL'
+    if name_clean in ('rest api', 'restful api', 'rest apis'): return 'REST API'
+    if name_clean in ('redis',): return 'Redis'
+    if name_clean in ('spark', 'apache spark'): return 'Spark'
+    if name_clean in ('hadoop',): return 'Hadoop'
+    if name_clean in ('kafka', 'apache kafka'): return 'Kafka'
+    if name_clean in ('airflow', 'apache airflow'): return 'Airflow'
+    if name_clean in ('snowflake',): return 'Snowflake'
+    if name_clean in ('bigquery',): return 'BigQuery'
+    if name_clean in ('redshift',): return 'Redshift'
+    if name_clean in ('dbt',): return 'dbt'
     
     # Fallback to standard casing
-    if len(name) <= 3:
-        return name.upper()
-    return name.title()
+    if len(name_clean) <= 3:
+        return name_clean.upper()
+    return name_clean.title()
 
 
 def _extract_skills_from_text(text):
