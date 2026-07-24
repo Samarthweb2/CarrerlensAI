@@ -14,7 +14,6 @@
 ## 🔗 Live Demo & Deployments
 
 - 🌐 **Frontend Application**: [https://careerlensai-frontend.onrender.com](https://careerlensai-frontend.onrender.com)
-- ⚙️ **Backend API Documentation**: [https://careerlensai-backend.onrender.com/docs](https://careerlensai-backend.onrender.com/docs)
 
 ---
 
