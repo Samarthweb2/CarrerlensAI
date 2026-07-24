@@ -210,12 +210,13 @@ app.include_router(jobs_router, prefix="/api/v1")
 app.include_router(dashboard_router, prefix="/api/v1")
 app.include_router(health_router)  # Expose /health at root for external ping services
 @app.get("/", tags=["Health Check"])
-async def health_check():
+@app.head("/", tags=["Health Check"])
+async def root_health_check():
     """
     Returns application status and version.
     """
     return {
-        "status": "healthy",
+        "status": "ok",
         "version": "1.0.0",
         "service": "CareerLensAI Backend API"
     }

@@ -9,6 +9,9 @@ router = APIRouter(
 startup_time = time.time()
 
 @router.get("/health", status_code=status.HTTP_200_OK)
+@router.get("/health/", status_code=status.HTTP_200_OK)
+@router.head("/health", status_code=status.HTTP_200_OK)
+@router.head("/health/", status_code=status.HTTP_200_OK)
 async def health_check():
     """
     Dedicated health check endpoint used to keep the Render free-tier instance awake.
@@ -17,8 +20,9 @@ async def health_check():
     uptime_seconds = int(time.time() - startup_time)
     
     return {
-        "status": "online",
+        "status": "ok",
         "service": "CareerLensAI Backend API",
         "uptime_seconds": uptime_seconds,
         "message": "Instance is awake and ready."
     }
+
