@@ -1,6 +1,7 @@
 import os
 import uuid
 import logging
+import asyncio
 from fastapi import APIRouter, UploadFile, File, HTTPException, status, Depends, Form
 from sqlalchemy.orm import Session
 from typing import List, Optional, Dict, Any
@@ -84,9 +85,9 @@ async def upload_resume(
         db.commit()
         db.refresh(db_resume)
 
-        # 5. Extract text and parse section chunks
+        # 5. Extract text and parse section chunks off the main event loop thread
         try:
-            parsed_data = parse_resume_to_json(file_path, filename)
+            parsed_data = await asyncio.to_thread(parse_resume_to_json, file_path, filename)
         except Exception as e:
             logger.error(f"Parsing failed for {filename}: {e}")
             # Cleanup

@@ -1,7 +1,8 @@
 import os
 import logging
+# pyrefly: ignore [missing-import]
 import httpx
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -10,12 +11,23 @@ ADZUNA_APP_ID = os.environ.get("ADZUNA_APP_ID")
 ADZUNA_APP_KEY = os.environ.get("ADZUNA_APP_KEY")
 JSEARCH_API_KEY = os.environ.get("JSEARCH_API_KEY")
 
+# Module-level HTTP client to reuse TCP connection pool across requests
+_http_client: Optional[httpx.AsyncClient] = None
+
+def get_http_client() -> httpx.AsyncClient:
+    """Returns a shared reusable httpx.AsyncClient instance for outbound job queries."""
+    global _http_client
+    if _http_client is None or _http_client.is_closed:
+        _http_client = httpx.AsyncClient(timeout=10.0)
+    return _http_client
+
 async def fetch_real_jobs(skills: List[str], location: str = "Bangalore") -> List[Dict[str, Any]]:
     """
     Fetches real-time jobs based on a user's skills using Adzuna or JSearch,
     falling back to realistic dynamic listings matching the user's tech stack.
     """
     query = " ".join(skills[:3]) if skills else "Software Developer"
+    client = get_http_client()
     
     # 1. Try JSearch via RapidAPI if configured
     if JSEARCH_API_KEY:
@@ -30,30 +42,29 @@ async def fetch_real_jobs(skills: List[str], location: str = "Bangalore") -> Lis
                 "page": "1",
                 "num_pages": "1"
             }
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                response = await client.get(url, headers=headers, params=params)
-                if response.status_code == 200:
-                    data = response.json()
-                    jobs = []
-                    for job in data.get("data", []):
-                        salary = "₹12–18 LPA"
-                        if job.get("job_min_salary") and job.get("job_max_salary"):
-                            salary = f"₹{job['job_min_salary']//1000}k–{job['job_max_salary']//1000}k"
-                        elif job.get("job_salary_period") == "hourly" and job.get("job_min_salary"):
-                            salary = f"${job['job_min_salary']}/hr"
-                        
-                        jobs.append({
-                            "company": job.get("employer_name", "Tech Company"),
-                            "role": job.get("job_title", "Developer"),
-                            "match": 85,
-                            "salary": salary,
-                            "location": job.get("job_city") or job.get("job_country") or location,
-                            "applyLink": job.get("job_apply_link") or "https://linkedin.com/jobs",
-                            "logo": (job.get("employer_name", "T")[:1]).upper(),
-                            "color": "#7C5CFF"
-                        })
-                    if jobs:
-                        return jobs
+            response = await client.get(url, headers=headers, params=params)
+            if response.status_code == 200:
+                data = response.json()
+                jobs = []
+                for job in data.get("data", []):
+                    salary = "₹12–18 LPA"
+                    if job.get("job_min_salary") and job.get("job_max_salary"):
+                        salary = f"₹{job['job_min_salary']//1000}k–{job['job_max_salary']//1000}k"
+                    elif job.get("job_salary_period") == "hourly" and job.get("job_min_salary"):
+                        salary = f"${job['job_min_salary']}/hr"
+                    
+                    jobs.append({
+                        "company": job.get("employer_name", "Tech Company"),
+                        "role": job.get("job_title", "Developer"),
+                        "match": 85,
+                        "salary": salary,
+                        "location": job.get("job_city") or job.get("job_country") or location,
+                        "applyLink": job.get("job_apply_link") or "https://linkedin.com/jobs",
+                        "logo": (job.get("employer_name", "T")[:1]).upper(),
+                        "color": "#7C5CFF"
+                    })
+                if jobs:
+                    return jobs
         except Exception as e:
             logger.warning(f"JSearch API query failed: {e}")
 
@@ -70,27 +81,31 @@ async def fetch_real_jobs(skills: List[str], location: str = "Bangalore") -> Lis
                 "what": query,
                 "where": location
             }
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                response = await client.get(url, params=params)
-                if response.status_code == 200:
-                    data = response.json()
-                    jobs = []
-                    for job in data.get("results", []):
-                        salary = "₹8–15 LPA"
-                        if job.get("salary_min") and job.get("salary_max"):
-                            salary = f"₹{int(job['salary_min'])//100000}–{int(job['salary_max'])//100000} LPA"
-                        jobs.append({
-                            "company": job.get("company", {}).get("display_name", "Tech Enterprise"),
-                            "role": job.get("title", "Developer"),
-                            "match": 88,
-                            "salary": salary,
-                            "location": job.get("location", {}).get("display_name", location),
-                            "applyLink": job.get("redirect_url") or "https://adzuna.com",
-                            "logo": (job.get("company", {}).get("display_name", "E")[:1]).upper(),
-                            "color": "#4CAF50"
-                        })
-                    if jobs:
-                        return jobs
+            response = await client.get(url, params=params)
+            if response.status_code == 200:
+                data = response.json()
+                jobs = []
+                for job in data.get("results", []):
+                    salary = "₹8–15 LPA"
+                    sal_min = job.get("salary_min")
+                    sal_max = job.get("salary_max")
+                    if sal_min and sal_max:
+                        try:
+                            salary = f"₹{int(float(sal_min))//100000}–{int(float(sal_max))//100000} LPA"
+                        except (ValueError, TypeError):
+                            salary = "₹8–15 LPA"
+                    jobs.append({
+                        "company": job.get("company", {}).get("display_name", "Tech Enterprise"),
+                        "role": job.get("title", "Developer"),
+                        "match": 88,
+                        "salary": salary,
+                        "location": job.get("location", {}).get("display_name", location),
+                        "applyLink": job.get("redirect_url") or "https://adzuna.com",
+                        "logo": (job.get("company", {}).get("display_name", "E")[:1]).upper(),
+                        "color": "#4CAF50"
+                    })
+                if jobs:
+                    return jobs
         except Exception as e:
             logger.warning(f"Adzuna API query failed: {e}")
 
@@ -137,3 +152,4 @@ async def fetch_real_jobs(skills: List[str], location: str = "Bangalore") -> Lis
         })
         
     return mock_matches
+

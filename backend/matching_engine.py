@@ -1,3 +1,13 @@
+"""
+CareerLensAI Legacy SQLite Matching Engine
+===========================================
+NOTE: The production FastAPI Web API uses SQLAlchemy ORM (`database/database.py`
+and `services/ai/job_matching.py`) with PostgreSQL / SQLite support via `DATABASE_URL`.
+
+This file is maintained for legacy batch processing tools (`bulk_parser.py`)
+and local Streamlit prototype scripts (`app.py`).
+"""
+
 import sqlite3
 import os
 
