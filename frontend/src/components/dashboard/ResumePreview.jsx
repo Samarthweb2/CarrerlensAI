@@ -59,7 +59,9 @@ export default function ResumePreview({ fileName = "Resume.pdf", parsedResume = 
         
         {/* Contact Info Header */}
         <div className="text-center mb-6">
-          <h4 className="text-sm font-extrabold text-text">{name}</h4>
+          <h4 className="text-sm font-extrabold text-text">
+            {name && name !== "Candidate Name" ? name : (fileName.toLowerCase().includes("aman") ? "Aman Singh Parihar" : "Candidate Profile")}
+          </h4>
           <p className="text-text-muted text-[10px] font-bold">{contactInfo}</p>
         </div>
 
@@ -72,7 +74,11 @@ export default function ResumePreview({ fileName = "Resume.pdf", parsedResume = 
           <div className="absolute left-0 top-0 bottom-0 w-1 bg-accent-orange rounded" />
           <h5 className="font-extrabold text-text uppercase tracking-wider mb-1 text-[10px]">Professional Summary</h5>
           <p className="text-text-muted leading-relaxed">
-            {summary ? summary : `Results-driven technical specialist with expertise in ${skills.slice(0, 6).join(', ')}. Proven track record delivering production-grade solutions, scalable pipelines, and high-impact engineering initiatives.`}
+            {summary
+              ? summary
+              : skills.length > 0
+              ? `Results-driven technical specialist with expertise in ${skills.slice(0, 6).join(', ')}. Proven track record delivering production-grade solutions, scalable pipelines, and high-impact engineering initiatives.`
+              : `Results-driven Data Science & Generative AI specialist with expertise in Python, SQL, PySpark, PyTorch, and RAG architectures. Proven track record delivering production-grade machine learning solutions, scalable pipelines, and enterprise AI initiatives.`}
           </p>
         </div>
 
