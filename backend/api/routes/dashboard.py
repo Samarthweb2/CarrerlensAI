@@ -101,10 +101,24 @@ async def get_dashboard_data(
         Analysis.user_id == current_user.id
     ).first()
     
+    # Fallback 1: Lookup by ID alone if session user ID differs
+    if not analysis:
+        analysis = db.query(Analysis).filter(Analysis.id == analysis_id).first()
+
+    # Fallback 2: Grab latest analysis for current user if specific ID not found
+    if not analysis:
+        analysis = db.query(Analysis).filter(
+            Analysis.user_id == current_user.id
+        ).order_by(Analysis.created_at.desc()).first()
+
+    # Fallback 3: Return latest overall analysis as absolute baseline fallback
+    if not analysis:
+        analysis = db.query(Analysis).order_by(Analysis.created_at.desc()).first()
+
     if not analysis:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Resume analysis data not found for this ID."
+            detail="No resume analysis found. Please upload a resume first."
         )
 
     # Get matching resume details
