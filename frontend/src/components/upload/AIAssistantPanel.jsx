@@ -68,14 +68,6 @@ export default function AIAssistantPanel() {
 
         <div className="flex items-center gap-2 mb-1">
           <h4 className="text-base font-extrabold text-text select-none">Hi Samarth! 👋</h4>
-          <button
-            onClick={toggleSpeech}
-            className={`px-2.5 py-1 text-[11px] font-black rounded-lg border-2 border-text transition-all flex items-center gap-1 shadow-[2px_2px_0px_#1F1F1F] cursor-pointer ${
-              isSpeaking ? 'bg-accent-green text-text' : 'bg-primary hover:bg-[#FFD54F] text-text'
-            }`}
-          >
-            <span>{isSpeaking ? '🔊 Speaking...' : '🎙️ Listen'}</span>
-          </button>
         </div>
         <p className="text-xs font-bold text-text-light mb-4 max-w-[210px] select-none">
           Ready to improve your career today? Here is your quick AI tip:
