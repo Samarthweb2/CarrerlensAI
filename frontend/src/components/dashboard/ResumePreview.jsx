@@ -24,6 +24,7 @@ export default function ResumePreview({ fileName = "Resume.pdf", parsedResume = 
     name = "Candidate Name",
     email = "email@example.com",
     phone = "",
+    summary = "",
     links = {},
     education = [],
     experience = [],
@@ -70,8 +71,8 @@ export default function ResumePreview({ fileName = "Resume.pdf", parsedResume = 
           {/* Weakness highlights stripe */}
           <div className="absolute left-0 top-0 bottom-0 w-1 bg-accent-orange rounded" />
           <h5 className="font-extrabold text-text uppercase tracking-wider mb-1 text-[10px]">Professional Summary</h5>
-          <p className="text-text-muted">
-            Motivated professional with strong skills in {skills.slice(0, 5).join(', ')}. Detail-oriented team worker who thrives in fast-paced software development and technology environments.
+          <p className="text-text-muted leading-relaxed">
+            {summary ? summary : `Results-driven technical specialist with expertise in ${skills.slice(0, 6).join(', ')}. Proven track record delivering production-grade solutions, scalable pipelines, and high-impact engineering initiatives.`}
           </p>
         </div>
 

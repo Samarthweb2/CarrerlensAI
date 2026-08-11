@@ -139,7 +139,16 @@ async def get_dashboard_data(
     }
     
     current_roadmap = analysis.roadmap or []
-    has_generic_swe_roadmap = any("Software Eng" in step.get("title", "") for step in current_roadmap)
+    has_generic_roadmap = (
+        not current_roadmap or
+        any(
+            any(kw in step.get("title", "") for kw in [
+                "Software Engineer", "Software Eng", "Student", "Junior Engineer",
+                "Mid-Level Professional", "Senior Professional", "Lead / Architect"
+            ])
+            for step in current_roadmap if isinstance(step, dict)
+        )
+    )
     
     from services.ai.job_matching import detect_candidate_domain
     from services.ai.heuristics import generate_personalized_career_roadmap
@@ -151,7 +160,7 @@ async def get_dashboard_data(
             
     detected_domain = detect_candidate_domain(skills_lower)
     
-    if not current_roadmap or (detected_domain == 'data' and has_generic_swe_roadmap) or (detected_domain != 'general' and has_generic_swe_roadmap):
+    if has_generic_roadmap and (detected_domain in ('data', 'backend', 'devops', 'frontend', 'cybersecurity') or detected_domain != 'general'):
         current_roadmap = generate_personalized_career_roadmap(parsed_res if isinstance(parsed_res, dict) else {}, detected_domain, analysis.ats_score)
         try:
             analysis.roadmap = current_roadmap

@@ -74,9 +74,19 @@ def analyze_resume_text(
                 if key in gemini_result and isinstance(gemini_result[key], (int, float)):
                     result[key] = int(gemini_result[key])
                     
-            for key in ["suggestions", "improvements", "interviewQuestions", "roadmap"]:
+            for key in ["suggestions", "improvements", "interviewQuestions"]:
                 if key in gemini_result and isinstance(gemini_result[key], list):
                     result[key] = gemini_result[key]
+                    
+            # Only use Gemini roadmap if it provides non-generic, domain-specific milestones
+            if "roadmap" in gemini_result and isinstance(gemini_result["roadmap"], list) and gemini_result["roadmap"]:
+                gemini_roadmap = gemini_result["roadmap"]
+                has_generic = any(
+                    any(kw in step.get("title", "") for kw in ["Software Eng", "Student / Foundational", "Mid-Level Professional", "Junior Engineer"])
+                    for step in gemini_roadmap if isinstance(step, dict)
+                )
+                if not has_generic:
+                    result["roadmap"] = gemini_roadmap
                     
             for key in ["sectionScores", "keywordMatch"]:
                 if key in gemini_result and isinstance(gemini_result[key], dict):
