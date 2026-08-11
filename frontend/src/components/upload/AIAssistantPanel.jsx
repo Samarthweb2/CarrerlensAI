@@ -30,6 +30,30 @@ export default function AIAssistantPanel() {
     { title: 'Interview Tips', desc: 'Practice with custom AI bots', icon: '🧠', color: '#FF8A50' }
   ];
 
+  const [isSpeaking, setIsSpeaking] = useState(false);
+
+  const toggleSpeech = () => {
+    if (!('speechSynthesis' in window)) {
+      alert("Text-to-Speech is not supported in this browser version.");
+      return;
+    }
+
+    if (isSpeaking) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+    } else {
+      window.speechSynthesis.cancel();
+      const textToSpeak = `Hello! Here is your AI career tip: ${activeTip}`;
+      const utterance = new SpeechSynthesisUtterance(textToSpeak);
+      utterance.rate = 1.0;
+      utterance.pitch = 1.1;
+      utterance.onend = () => setIsSpeaking(false);
+      utterance.onerror = () => setIsSpeaking(false);
+      setIsSpeaking(true);
+      window.speechSynthesis.speak(utterance);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-6 w-full text-left">
       
@@ -42,16 +66,16 @@ export default function AIAssistantPanel() {
       >
         <div className="absolute top-0 right-0 w-24 h-24 bg-secondary/5 rounded-bl-full pointer-events-none" />
         
-        {/* Animated robot avatar */}
-        <div className="w-20 h-20 relative mb-4 select-none">
+        {/* Animated robot avatar with talk audio button */}
+        <div className="w-20 h-20 relative mb-4 select-none group cursor-pointer" onClick={toggleSpeech} title="Click robot to speak tip!">
           <svg viewBox="0 0 100 100" className="w-20 h-20">
             <ellipse cx="50" cy="90" rx="25" ry="4" fill="#E8D5B0" opacity="0.4"/>
             <motion.g
-              animate={{ y: [0, -3, 0] }}
-              transition={{ repeat: Infinity, duration: 3.5, ease: "easeInOut" }}
+              animate={{ y: isSpeaking ? [0, -4, 0, -2, 0] : [0, -3, 0] }}
+              transition={{ repeat: Infinity, duration: isSpeaking ? 0.6 : 3.5, ease: "easeInOut" }}
             >
               <line x1="50" y1="24" x2="50" y2="10" stroke="#7C5CFF" strokeWidth="3" />
-              <circle cx="50" cy="8" r="4" fill="#FFD54F" />
+              <circle cx="50" cy="8" r="4" fill={isSpeaking ? "#00E676" : "#FFD54F"} />
               <rect x="20" y="24" width="60" height="52" rx="12" fill="#7C5CFF" stroke="#1F1F1F" strokeWidth="2.5" />
               <rect x="25" y="29" width="50" height="42" rx="9" fill="white" />
               {/* Eyes */}
@@ -60,14 +84,32 @@ export default function AIAssistantPanel() {
               {/* Blush */}
               <circle cx="32" cy="54" r="3" fill="#FFB4B4" />
               <circle cx="68" cy="54" r="3" fill="#FFB4B4" />
-              {/* Smile */}
-              <path d="M 44 56 Q 50 61 56 56" stroke="#1F1F1F" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+              {/* Smile / Talking mouth */}
+              {isSpeaking ? (
+                <motion.rect
+                  x="43" y="55" width="14" height="7" rx="3.5" fill="#FF5252"
+                  animate={{ height: [3, 9, 3] }}
+                  transition={{ repeat: Infinity, duration: 0.3 }}
+                />
+              ) : (
+                <path d="M 44 56 Q 50 61 56 56" stroke="#1F1F1F" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+              )}
             </motion.g>
           </svg>
         </div>
 
-        <h4 className="text-base font-extrabold text-text select-none">Hi Samarth! 👋</h4>
-        <p className="text-xs font-bold text-text-light mb-5 max-w-[210px] select-none">
+        <div className="flex items-center gap-2 mb-1">
+          <h4 className="text-base font-extrabold text-text select-none">Hi Samarth! 👋</h4>
+          <button
+            onClick={toggleSpeech}
+            className={`px-2.5 py-1 text-[11px] font-black rounded-lg border-2 border-text transition-all flex items-center gap-1 shadow-[2px_2px_0px_#1F1F1F] cursor-pointer ${
+              isSpeaking ? 'bg-accent-green text-text' : 'bg-primary hover:bg-[#FFD54F] text-text'
+            }`}
+          >
+            <span>{isSpeaking ? '🔊 Speaking...' : '🎙️ Listen'}</span>
+          </button>
+        </div>
+        <p className="text-xs font-bold text-text-light mb-4 max-w-[210px] select-none">
           Ready to improve your career today? Here is your quick AI tip:
         </p>
 

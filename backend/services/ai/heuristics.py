@@ -347,10 +347,11 @@ def analyze_resume_with_heuristics(parsed_resume: Dict[str, Any], job_descriptio
             {"company": "Razorpay", "role": "Backend Engineer", "salary": "₹18–24 LPA", "location": "Bangalore", "logo": "R", "color": "#3395FF", "req_skills": {"python", "node.js", "sql", "docker", "redis"}},
         ],
         'data': [
-            {"company": "Google", "role": "Associate Data Analyst", "salary": "₹18–24 LPA", "location": "Bangalore", "logo": "G", "color": "#4285F4", "req_skills": {"python", "sql", "tableau", "excel", "statistics"}},
-            {"company": "Microsoft", "role": "Data Engineer I", "salary": "₹20–26 LPA", "location": "Hyderabad", "logo": "M", "color": "#F25022", "req_skills": {"python", "sql", "spark", "aws", "airflow"}},
-            {"company": "Amazon", "role": "Business Intelligence Eng", "salary": "₹16–22 LPA", "location": "Chennai", "logo": "A", "color": "#FF9900", "req_skills": {"sql", "python", "tableau", "power bi", "excel"}},
-            {"company": "Swiggy", "role": "Data Analyst", "salary": "₹14–20 LPA", "location": "Bangalore", "logo": "S", "color": "#FC8019", "req_skills": {"python", "sql", "pandas", "excel", "analytics"}},
+            {"company": "Tiger Analytics", "role": "Senior Data Scientist (GenAI & RAG)", "salary": "₹22–32 LPA", "location": "Bangalore", "logo": "T", "color": "#00A88F", "req_skills": {"python", "sql", "pytorch", "rag", "agentic ai", "llms", "pyspark", "deep learning", "machine learning"}},
+            {"company": "Google", "role": "Staff Data Scientist / ML Engineer", "salary": "₹28–38 LPA", "location": "Bangalore", "logo": "G", "color": "#4285F4", "req_skills": {"python", "sql", "tensorflow", "pytorch", "scikit-learn", "statistics", "machine learning"}},
+            {"company": "Microsoft", "role": "GenAI Systems Engineer", "salary": "₹25–35 LPA", "location": "Hyderabad", "logo": "M", "color": "#F25022", "req_skills": {"python", "sql", "spark", "aws", "airflow", "llms", "langchain"}},
+            {"company": "Amazon", "role": "Senior Applied Scientist (NLP & LLMs)", "salary": "₹30–42 LPA", "location": "Chennai", "logo": "A", "color": "#FF9900", "req_skills": {"python", "sql", "nlp", "deep learning", "pytorch", "transformers"}},
+            {"company": "Swiggy", "role": "Lead Data Scientist", "salary": "₹24–34 LPA", "location": "Bangalore", "logo": "S", "color": "#FC8019", "req_skills": {"python", "sql", "pandas", "scikit-learn", "machine learning", "analytics"}},
         ],
         'general': [
             {"company": "Google", "role": "Software Engineer I", "salary": "₹18–25 LPA", "location": "Bangalore", "logo": "G", "color": "#4285F4", "req_skills": {"python", "java", "sql", "git", "algorithms"}},

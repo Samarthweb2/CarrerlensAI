@@ -42,18 +42,27 @@ def detect_candidate_domain(skills_lower: set) -> str:
     
     frontend_kw = {'react', 'html', 'css', 'javascript', 'typescript', 'vue', 'angular', 'svelte', 'next.js', 'tailwind', 'sass', 'webpack', 'bootstrap', 'redux', 'vite', 'figma', 'ui', 'ux', 'responsive design'}
     backend_kw = {'node.js', 'express', 'fastapi', 'django', 'flask', 'python', 'java', 'spring', 'c#', '.net', 'ruby', 'rails', 'php', 'laravel', 'go', 'rust', 'rest api', 'graphql', 'microservices', 'redis', 'rabbitmq', 'kafka', 'postgresql', 'mysql', 'mongodb', 'sqlite'}
-    data_kw = {'pandas', 'numpy', 'sql', 'tableau', 'power bi', 'spark', 'hadoop', 'hive', 'dbt', 'snowflake', 'redshift', 'bigquery', 'etl', 'data analysis', 'data science', 'statistics', 'analytics', 'machine learning', 'deep learning', 'nlp', 'tensorflow', 'pytorch', 'scikit-learn', 'excel', 'looker'}
+    data_kw = {
+        'pandas', 'numpy', 'sql', 'tableau', 'power bi', 'spark', 'pyspark', 'hadoop', 'hive', 'dbt',
+        'snowflake', 'redshift', 'bigquery', 'etl', 'data analysis', 'data science', 'data scientist',
+        'statistics', 'analytics', 'machine learning', 'deep learning', 'nlp', 'tensorflow', 'pytorch',
+        'scikit-learn', 'excel', 'looker', 'rag', 'agentic ai', 'multi-agent systems', 'llm', 'llms',
+        'langchain', 'langgraph', 'llamaindex', 'ragas', 'langsmith', 'statistical modeling',
+        'time series', 'marketing mix modeling', 'recommender systems', 'multimodal ai', 'bayesian modeling',
+        'bayesian', 'transformers', 'genai', 'azure ai studio', 'airflow'
+    }
     devops_kw = {'docker', 'kubernetes', 'aws', 'gcp', 'azure', 'terraform', 'ansible', 'jenkins', 'ci/cd', 'devops', 'linux', 'nginx', 'sysadmin', 'cloud'}
     mobile_kw = {'swift', 'kotlin', 'react native', 'flutter', 'ios', 'android', 'mobile'}
     security_kw = {'security', 'cybersecurity', 'penetration testing', 'cryptography', 'firewall', 'siem'}
 
     for s in skills_lower:
-        if s in frontend_kw: scores['frontend'] += 1
-        if s in backend_kw: scores['backend'] += 1
-        if s in data_kw: scores['data'] += 1
-        if s in devops_kw: scores['devops'] += 1
-        if s in mobile_kw: scores['mobile'] += 1
-        if s in security_kw: scores['cybersecurity'] += 1
+        s_clean = s.lower()
+        if s_clean in frontend_kw: scores['frontend'] += 1
+        if s_clean in backend_kw: scores['backend'] += 1
+        if s_clean in data_kw or any(dk in s_clean for dk in ['data', 'learning', 'ai', 'model', 'analytics']): scores['data'] += 1.5
+        if s_clean in devops_kw: scores['devops'] += 1
+        if s_clean in mobile_kw: scores['mobile'] += 1
+        if s_clean in security_kw: scores['cybersecurity'] += 1
 
     sorted_scores = sorted(scores.items(), key=lambda x: x[1], reverse=True)
     if sorted_scores[0][1] > 0:
@@ -82,17 +91,21 @@ def detect_domain_weighted(skills_lower: list) -> str:
             'heroku', 'vercel', 'netlify', 'cloud', 'monitoring',
         },
         'data': {
-            'pandas', 'numpy', 'power bi', 'tableau', 'spark', 'hadoop',
+            'pandas', 'numpy', 'power bi', 'tableau', 'spark', 'pyspark', 'hadoop',
             'machine learning', 'deep learning', 'nlp', 'tensorflow', 'pytorch',
-            'scikit-learn', 'data science', 'data analyst', 'data engineering',
+            'scikit-learn', 'data science', 'data scientist', 'data analyst', 'data engineering',
             'statistics', 'analytics', 'matplotlib', 'seaborn', 'airflow',
-            'dbt', 'snowflake', 'bigquery', 'etl', 'excel', 'looker',
+            'dbt', 'snowflake', 'bigquery', 'etl', 'excel', 'looker', 'rag',
+            'agentic ai', 'multi-agent systems', 'llm', 'llms', 'langchain',
+            'langgraph', 'llamaindex', 'ragas', 'langsmith', 'statistical modeling',
+            'time series', 'marketing mix modeling', 'recommender systems',
+            'multimodal ai', 'bayesian modeling', 'bayesian', 'transformers', 'genai',
         },
     }
 
     scores = {}
     for domain, keywords in domain_keywords.items():
-        score = sum(1 for s in skills_lower if s in keywords)
+        score = sum(1 for s in skills_lower if s.lower() in keywords)
         scores[domain] = score
 
     backend_devops_score = scores.get('backend', 0) + scores.get('devops', 0)
@@ -102,6 +115,8 @@ def detect_domain_weighted(skills_lower: list) -> str:
     max_score = max(frontend_score, backend_devops_score, data_score)
     if max_score == 0:
         return 'general'
+    if data_score == max_score:
+        return 'data'
     if frontend_score == max_score:
         return 'frontend'
     if backend_devops_score == max_score:
@@ -129,13 +144,13 @@ def match_jobs_from_db(parsed_resume: Dict[str, Any], job_description: Optional[
         from sqlalchemy import or_, cast, String
         
         domain_title_keywords = {
-            'frontend': ['frontend', 'react', 'ui', 'web', 'software', 'developer', 'full stack'],
-            'backend': ['backend', 'software', 'developer', 'api', 'python', 'java', 'node', 'systems', 'engineer'],
-            'data': ['data', 'analyst', 'analytics', 'bi', 'machine learning', 'data science', 'statistics', 'engineer'],
-            'devops': ['devops', 'cloud', 'sre', 'infrastructure', 'kubernetes', 'systems', 'aws'],
-            'mobile': ['mobile', 'ios', 'android', 'flutter', 'react native', 'developer'],
-            'cybersecurity': ['security', 'cyber', 'analyst', 'engineer'],
-            'general': ['software', 'engineer', 'developer', 'analyst']
+            'frontend': ['frontend', 'react', 'ui', 'web', 'full stack'],
+            'backend': ['backend', 'api', 'python', 'java', 'node', 'systems engineer', 'backend engineer'],
+            'data': ['data scientist', 'data science', 'machine learning', 'ml engineer', 'data engineer', 'ai engineer', 'data analyst', 'analytics', 'bi', 'scientist'],
+            'devops': ['devops', 'cloud', 'sre', 'infrastructure', 'kubernetes', 'aws engineer'],
+            'mobile': ['mobile', 'ios', 'android', 'flutter', 'react native'],
+            'cybersecurity': ['security', 'cyber', 'analyst', 'security engineer'],
+            'general': ['software engineer', 'developer', 'analyst']
         }
         
         kw_list = domain_title_keywords.get(domain, domain_title_keywords['general'])

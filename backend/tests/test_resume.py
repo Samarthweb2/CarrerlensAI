@@ -207,3 +207,54 @@ def test_jobs_endpoint():
     data = response.json()
     assert data["status"] == "success"
     assert len(data["matches"]) > 0
+
+def test_data_science_resume_domain_and_jobs():
+    data_science_resume_text = """
+    Aman Singh Parihar
+    mailamansinghparihar@gmail.com | (+91) 9165936470
+    LinkedIn: aman1907 | Leetcode: aman-solve | GitHub: pra-aman | Kaggle: kaggle-aman
+    
+    Summary
+    Results-Driven Data Scientist with 3+ years of experience delivering production-grade Generative AI and machine learning solutions in enterprise environments. Skilled in RAG pipelines, multi-agent systems, and statistical modeling.
+    
+    Professional Experience
+    Tiger Analytics (Data Scientist) - 2022 - Present
+    - RAG-Based Personal Finance Chatbot: Designed and shipped production retrieval-augmented generation (RAG) chatbot combining semantic document retrieval with user interaction history.
+    - Multi-Agent Cross-Dataset Insights System: Led end-to-end development of production multi-agent system.
+    
+    Skills
+    Programming: Python, SQL
+    Libraries: NumPy, Pandas, PySpark, Scikit-learn, PyTorch, TensorFlow
+    Machine Learning: Supervised/Unsupervised Learning, Deep Learning, NLP, Transformers, Statistical Modeling
+    Generative AI: LLMs, Prompt Engineering, RAG, Agentic AI, Multi-Agent Systems, LangChain, LangGraph, LlamaIndex
+    
+    Education
+    Madhav Institute of Technology and Science - 2018-2022
+    B.Tech in Electronics and Telecommunication Engineering
+    """
+    
+    from resume_parser import extract_skills_keywords
+    from services.ai.job_matching import detect_candidate_domain
+    from services.ai_service import analyze_resume_text
+    
+    skills = extract_skills_keywords(data_science_resume_text)
+    assert "PySpark" in skills or "Python" in skills
+    assert "RAG" in skills or "Agentic AI" in skills or "PyTorch" in skills
+    
+    skills_lower = set([s.lower() for s in skills])
+    domain = detect_candidate_domain(skills_lower)
+    assert domain == 'data'
+    
+    parsed_profile = {
+        "fileName": "Aman_Singh_Parihar_Resume.pdf",
+        "text": data_science_resume_text,
+        "skills": skills,
+        "experience": ["Tiger Analytics (Data Scientist)"]
+    }
+    
+    analysis = analyze_resume_text(parsed_profile)
+    job_roles = [j["role"].lower() for j in analysis["jobMatches"]]
+    
+    # Verify job roles are Data Scientist / ML Engineer / AI roles, NOT Software Engineer I (SWE)
+    assert any("data scientist" in r or "ml engineer" in r or "genai" in r or "applied scientist" in r for r in job_roles)
+

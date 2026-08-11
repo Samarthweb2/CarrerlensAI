@@ -73,6 +73,20 @@ try:
         if db.query(JobRole).count() == 0:
             default_roles = [
                 JobRole(
+                    title="Senior Data Scientist (GenAI & RAG)",
+                    company="Tiger Analytics",
+                    location="Bangalore",
+                    industry="AI & Data Science",
+                    description="Lead end-to-end GenAI & Machine Learning solutions, RAG pipelines, LLM fine-tuning, and multi-agent AI platforms.",
+                    required_skills=["Python", "SQL", "Machine Learning", "PyTorch", "RAG", "Agentic AI", "PySpark"],
+                    preferred_skills=["LangChain", "LangGraph", "Deep Learning", "Docker", "AWS"],
+                    experience_level="Senior",
+                    salary_min=2400000,
+                    salary_max=3600000,
+                    work_type="Hybrid",
+                    ats_keywords=["Data Scientist", "GenAI", "RAG", "Machine Learning", "PyTorch", "Python", "SQL"]
+                ),
+                JobRole(
                     title="Associate Data Analyst",
                     company="Google",
                     location="Bangalore",

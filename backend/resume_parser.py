@@ -81,33 +81,40 @@ def extract_links(text: str) -> Dict[str, Optional[str]]:
 
 def extract_skills_keywords(text: str) -> List[str]:
     """
-    Matches text against a list of standard tech skills.
+    Matches text against a comprehensive list of tech, data science, GenAI, and MLOps skills.
     """
-    common_skills = [
-        "python", "sql", "power bi", "react", "fastapi", "machine learning", 
-        "pandas", "numpy", "docker", "aws", "kubernetes", "ci/cd", "javascript",
-        "html", "css", "git", "java", "c++", "tableau", "excel", "spark", "hadoop",
-        "nlp", "deep learning", "pytorch", "tensorflow", "agile", "scrum"
-    ]
+    title_case_mapping = {
+        "python": "Python", "sql": "SQL", "power bi": "Power BI", "react": "React",
+        "fastapi": "FastAPI", "machine learning": "Machine Learning", "pandas": "Pandas",
+        "numpy": "NumPy", "docker": "Docker", "aws": "AWS", "kubernetes": "Kubernetes",
+        "ci/cd": "CI/CD", "javascript": "JavaScript", "html": "HTML", "css": "CSS",
+        "git": "Git", "java": "Java", "c++": "C++", "tableau": "Tableau", "excel": "Excel",
+        "spark": "Spark", "pyspark": "PySpark", "scikit-learn": "Scikit-Learn", "scikit learn": "Scikit-Learn",
+        "hadoop": "Hadoop", "nlp": "NLP", "deep learning": "Deep Learning", "pytorch": "PyTorch",
+        "tensorflow": "TensorFlow", "agile": "Agile", "scrum": "Scrum",
+        "rag": "RAG", "agentic ai": "Agentic AI", "llm": "LLMs", "llms": "LLMs",
+        "multi-agent": "Multi-Agent Systems", "multi-agent systems": "Multi-Agent Systems",
+        "langchain": "LangChain", "langgraph": "LangGraph", "llamaindex": "LlamaIndex",
+        "ragas": "RAGAS", "langsmith": "LangSmith", "bigquery": "BigQuery", "airflow": "Airflow",
+        "flask": "Flask", "rest apis": "REST APIs", "rest api": "REST API", "sqlite": "SQLite",
+        "data science": "Data Science", "data scientist": "Data Science", "data analysis": "Data Analysis",
+        "statistical modeling": "Statistical Modeling", "statistics": "Statistics",
+        "time series": "Time Series", "marketing mix modeling": "Marketing Mix Modeling",
+        "recommender systems": "Recommender Systems", "multimodal ai": "Multimodal AI",
+        "bayesian": "Bayesian Modeling", "azure ai studio": "Azure AI Studio",
+        "dbt": "dbt", "snowflake": "Snowflake", "redis": "Redis", "postgresql": "PostgreSQL",
+        "temporal": "Temporal", "transformers": "Transformers"
+    }
     
     extracted = []
     text_lower = text.lower()
-    for skill in common_skills:
-        pattern = r'\b' + re.escape(skill) + r'\b'
+    for skill_key, display_name in title_case_mapping.items():
+        pattern = r'\b' + re.escape(skill_key) + r'\b'
         if re.search(pattern, text_lower):
-            # Format back to nice casing
-            title_case_mapping = {
-                "python": "Python", "sql": "SQL", "power bi": "Power BI", "react": "React",
-                "fastapi": "FastAPI", "machine learning": "Machine Learning", "pandas": "Pandas",
-                "numpy": "NumPy", "docker": "Docker", "aws": "AWS", "kubernetes": "Kubernetes",
-                "ci/cd": "CI/CD", "javascript": "JavaScript", "html": "HTML", "css": "CSS",
-                "git": "Git", "java": "Java", "c++": "C++", "tableau": "Tableau", "excel": "Excel",
-                "spark": "Spark", "hadoop": "Hadoop", "nlp": "NLP", "deep learning": "Deep Learning",
-                "pytorch": "PyTorch", "tensorflow": "TensorFlow", "agile": "Agile", "scrum": "Scrum"
-            }
-            extracted.append(title_case_mapping.get(skill, skill.title()))
+            extracted.append(display_name)
             
-    return list(set(extracted))
+    # Deduplicate while preserving cased names
+    return list(dict.fromkeys(extracted))
 
 def extract_section_content(text: str, section_name: str) -> List[str]:
     """

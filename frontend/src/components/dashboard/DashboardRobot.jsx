@@ -1,14 +1,48 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 
-export default function DashboardRobot({ score = 91 }) {
+export default function DashboardRobot({ score = 91, domain = 'Data Science' }) {
+  const [isSpeaking, setIsSpeaking] = useState(false);
+
   // Determine expression
   let mood = 'happy';
   if (score < 60) mood = 'concerned';
   else if (score < 85) mood = 'thinking';
 
+  const speakAnalysis = (e) => {
+    e.stopPropagation();
+    if (!('speechSynthesis' in window)) {
+      alert("Text-to-Speech is not supported in this browser version.");
+      return;
+    }
+
+    if (isSpeaking) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+    } else {
+      window.speechSynthesis.cancel();
+      const textToSpeak = `Hello! Your resume analysis is complete. Your ATS Score is ${score} out of 100. We identified your profile as a ${domain} specialist with strong skill alignment. Check out your recommended career matches below!`;
+      const utterance = new SpeechSynthesisUtterance(textToSpeak);
+      utterance.rate = 1.0;
+      utterance.pitch = 1.1;
+      utterance.onend = () => setIsSpeaking(false);
+      utterance.onerror = () => setIsSpeaking(false);
+      setIsSpeaking(true);
+      window.speechSynthesis.speak(utterance);
+    }
+  };
+
   return (
-    <div className="w-full flex justify-center items-center select-none pointer-events-none relative h-36">
+    <div className="w-full flex flex-col justify-center items-center select-none relative h-40">
+      <button
+        onClick={speakAnalysis}
+        className={`mb-1 px-3 py-1 text-[11px] font-black rounded-full border-2 border-text transition-all flex items-center gap-1.5 shadow-[2px_2px_0px_#1F1F1F] cursor-pointer pointer-events-auto z-20 ${
+          isSpeaking ? 'bg-accent-green text-text animate-pulse' : 'bg-primary hover:bg-[#FFD54F] text-text'
+        }`}
+        title="Click to hear AI mascot speak your resume analysis!"
+      >
+        <span>{isSpeaking ? '🔊 Mascot Speaking...' : '🎙️ Click Mascot to Speak'}</span>
+      </button>
       {/* Sparkles / Particles for high scores */}
       {mood === 'happy' && (
         <>
