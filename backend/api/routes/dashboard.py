@@ -166,13 +166,30 @@ async def get_dashboard_data(
             analysis.roadmap = current_roadmap
             db.add(analysis)
             db.commit()
-            db.refresh(analysis)
         except Exception as e:
             logger.warning(f"Could not persist auto-migrated roadmap: {e}")
             db.rollback()
 
     first_name = current_user.full_name.split(' ')[0] if current_user.full_name else "Samarth"
-    
+
+    res_profile = getattr(analysis, "parsed_resume", None)
+    if isinstance(res_profile, dict):
+        if not res_profile.get("skills") and analysis.skills_found:
+            res_profile["skills"] = analysis.skills_found
+    else:
+        res_profile = {
+            "name": current_user.full_name,
+            "email": current_user.email,
+            "phone": None,
+            "summary": "",
+            "links": {"github": None, "linkedin": None},
+            "education": [],
+            "experience": [],
+            "projects": [],
+            "skills": analysis.skills_found or [],
+            "certifications": []
+        }
+
     return {
         "userName": first_name,
         "atsScore": analysis.ats_score,
@@ -198,15 +215,5 @@ async def get_dashboard_data(
         "jobDescription": getattr(analysis, "job_description", None),
         "improvements": getattr(analysis, "improvements", []) or [],
         "interviewQuestions": getattr(analysis, "interview_questions", []) or [],
-        "parsedResume": getattr(analysis, "parsed_resume", None) or {
-            "name": current_user.full_name,
-            "email": current_user.email,
-            "phone": None,
-            "links": {"github": None, "linkedin": None},
-            "education": [],
-            "experience": [],
-            "projects": [],
-            "skills": analysis.skills_found,
-            "certifications": []
-        }
+        "parsedResume": res_profile
     }

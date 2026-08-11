@@ -109,7 +109,7 @@ def extract_skills_keywords(text: str) -> List[str]:
     extracted = []
     text_lower = text.lower()
     for skill_key, display_name in title_case_mapping.items():
-        pattern = r'\b' + re.escape(skill_key) + r'\b'
+        pattern = r'(?:\b|(?<=\W))' + re.escape(skill_key) + r'(?:\b|(?=\W))'
         if re.search(pattern, text_lower):
             extracted.append(display_name)
             
@@ -122,6 +122,7 @@ def extract_section_content(text: str, section_name: str) -> List[str]:
     """
     lines = text.split('\n')
     section_headers = {
+        "summary": ["summary", "professional summary", "executive summary", "profile", "about me", "career summary", "objective"],
         "education": ["education", "academic background", "studies", "qualification", "qualifications", "academic credentials"],
         "experience": ["experience", "employment history", "work experience", "professional experience", "internships", "employment"],
         "projects": ["projects", "personal projects", "academic projects", "key projects", "development projects"],
@@ -188,6 +189,14 @@ def parse_resume_to_json(file_path: str, filename: str) -> Dict[str, Any]:
     phone = extract_phone(raw_text)
     links = extract_links(raw_text)
     
+    summary_lines = extract_section_content(raw_text, "summary")
+    summary = " ".join(summary_lines) if summary_lines else ""
+    if not summary:
+        for line in [l.strip() for l in raw_text.split('\n') if l.strip()][:15]:
+            if len(line) > 50 and not any(k in line.lower() for k in ['email', '@', 'phone', 'github', 'linkedin', 'http']):
+                summary = line
+                break
+    
     education = extract_section_content(raw_text, "education")
     experience = extract_section_content(raw_text, "experience")
     projects = extract_section_content(raw_text, "projects")
@@ -203,6 +212,7 @@ def parse_resume_to_json(file_path: str, filename: str) -> Dict[str, Any]:
         "email": email,
         "phone": phone,
         "text": raw_text,
+        "summary": summary,
         "education": education,
         "experience": experience,
         "projects": projects,
