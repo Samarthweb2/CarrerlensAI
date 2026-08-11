@@ -6,6 +6,17 @@ import fitz  # PyMuPDF
 # pyrefly: ignore [missing-import]
 import docx
 
+def clean_postgres_text(text: str) -> str:
+    """
+    Cleans raw text by stripping null bytes (\x00) and unprintable ASCII control characters
+    that break PostgreSQL UTF-8 database insertion.
+    """
+    if not text:
+        return ""
+    text = text.replace('\x00', '')
+    text = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\x9f]', '', text)
+    return text.strip()
+
 def extract_text_from_pdf(pdf_path: str) -> str:
     """
     Extracts plain text from a PDF file using PyMuPDF (fitz).
@@ -20,7 +31,7 @@ def extract_text_from_pdf(pdf_path: str) -> str:
         doc.close()
     except Exception as e:
         print(f"Error extracting text from PDF {pdf_path}: {e}")
-    return text.strip()
+    return clean_postgres_text(text)
 
 def extract_text_from_docx(docx_path: str) -> str:
     """
@@ -204,15 +215,18 @@ def parse_resume_to_json(file_path: str, filename: str) -> Dict[str, Any]:
     certifications = extract_section_content(raw_text, "certifications")
     
     extracted_name = extract_name(raw_text)
-    
+    clean_text = clean_postgres_text(raw_text)
+    clean_summary = clean_postgres_text(summary)
+    clean_name = clean_postgres_text(extracted_name) if extracted_name else None
+
     return {
         "fileId": str(os.path.basename(file_path).split('_')[0]),
         "fileName": filename,
-        "name": extracted_name or "Candidate Name",
+        "name": clean_name or "Candidate Name",
         "email": email,
         "phone": phone,
-        "text": raw_text,
-        "summary": summary,
+        "text": clean_text,
+        "summary": clean_summary,
         "education": education,
         "experience": experience,
         "projects": projects,

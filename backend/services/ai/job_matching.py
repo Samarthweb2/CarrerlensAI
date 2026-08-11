@@ -232,8 +232,11 @@ def match_jobs_from_db(parsed_resume: Dict[str, Any], job_description: Optional[
         
         missing_set = []
         for skill_lower, freq in sorted_aggregated_skills[:15]:
-            from etl_pipeline import standardize_skill_name
-            proper_name = standardize_skill_name(skill_lower)
+            try:
+                from etl_pipeline import standardize_skill_name
+                proper_name = standardize_skill_name(skill_lower)
+            except ImportError:
+                proper_name = skill_lower.title()
             if proper_name not in missing_set and proper_name.lower() not in SOFT_SKILLS:
                 missing_set.append(proper_name)
         missing_skills_from_db = missing_set[:5]
