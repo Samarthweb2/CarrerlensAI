@@ -133,7 +133,35 @@ async def get_dashboard_data(
             {"label": "Scan 3", "score": analysis.ats_score}
         ]
 
-    # Map database JSON arrays into standard mock dashboard formats
+    # Dynamic domain roadmap evaluation for legacy / generic scans
+    parsed_res = getattr(analysis, "parsed_resume", None) or {
+        "text": "", "skills": analysis.skills_found or [], "experience": []
+    }
+    
+    current_roadmap = analysis.roadmap or []
+    has_generic_swe_roadmap = any("Software Eng" in step.get("title", "") for step in current_roadmap)
+    
+    from services.ai.job_matching import detect_candidate_domain
+    from services.ai.heuristics import generate_personalized_career_roadmap
+    
+    skills_lower = set([s.lower() for s in (analysis.skills_found or [])])
+    if parsed_res and isinstance(parsed_res, dict) and parsed_res.get("text"):
+        for word in parsed_res["text"].lower().split():
+            skills_lower.add(word)
+            
+    detected_domain = detect_candidate_domain(skills_lower)
+    
+    if not current_roadmap or (detected_domain == 'data' and has_generic_swe_roadmap) or (detected_domain != 'general' and has_generic_swe_roadmap):
+        current_roadmap = generate_personalized_career_roadmap(parsed_res if isinstance(parsed_res, dict) else {}, detected_domain, analysis.ats_score)
+        try:
+            analysis.roadmap = current_roadmap
+            db.add(analysis)
+            db.commit()
+            db.refresh(analysis)
+        except Exception as e:
+            logger.warning(f"Could not persist auto-migrated roadmap: {e}")
+            db.rollback()
+
     first_name = current_user.full_name.split(' ')[0] if current_user.full_name else "Samarth"
     
     return {
@@ -155,14 +183,7 @@ async def get_dashboard_data(
             "missing": 100 - analysis.keywords,
             "density": "4.2%"
         },
-        "roadmap": analysis.roadmap or [
-            {"title": "Student", "completed": True, "desc": "Foundational coursework & project building"},
-            {"title": "Junior Analyst", "completed": True, "desc": "Data cleaning, reporting & SQL wrangling"},
-            {"title": "Data Analyst", "completed": True, "desc": "Dashboards, statistical tests & business reviews"},
-            {"title": "Senior Analyst", "completed": False, "desc": "Predictive models, pipeline architecture & coaching"},
-            {"title": "Analytics Engineer", "completed": False, "desc": "dbt orchestration, warehousing & analytics pipelines"},
-            {"title": "AI Engineer", "completed": False, "desc": "LLMs tuning, agent systems & microservice deployments"}
-        ],
+        "roadmap": current_roadmap,
         "jobMatches": analysis.job_matches or [],
         "historyData": history_data,
         "jobDescription": getattr(analysis, "job_description", None),

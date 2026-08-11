@@ -220,6 +220,80 @@ def generate_dynamic_interview_questions(skills: List[str], domain: str, parsed_
     
     return questions[:5]
 
+def generate_personalized_career_roadmap(parsed_resume: Dict[str, Any], domain: str, ats_score: int) -> List[Dict[str, Any]]:
+    """
+    Generates a personalized, domain-specific 6-step career roadmap tailored to the
+    candidate's actual resume content (experience, titles, degree, and detected domain).
+    """
+    exp = parsed_resume.get("experience", [])
+    skills = [s.lower() for s in parsed_resume.get("skills", [])]
+    text = parsed_resume.get("text", "").lower()
+    
+    is_senior = any(kw in text for kw in ["senior", "lead", "3+", "4+", "5+", "principal", "architect", "manager", "head"])
+    is_mid = any(kw in text for kw in ["2+", "3+", "data scientist", "engineer", "developer", "analyst"]) or len(exp) >= 2
+    
+    clean_domain = (domain or 'general').lower()
+    
+    if clean_domain in ('data', 'ai', 'ml', 'data science', 'data_science'):
+        if is_senior or any(kw in text for kw in ["data scientist", "rag", "agentic", "llm", "multi-agent", "pyspark", "pytorch"]):
+            return [
+                {"title": "Data & ML Foundations", "completed": True, "desc": "Python, SQL, statistics, data wrangling & exploratory analysis"},
+                {"title": "Data Scientist / ML Eng", "completed": True, "desc": "Production ML models, RAG pipelines, PySpark ETL & statistical modeling"},
+                {"title": "Senior Data Scientist", "completed": ats_score >= 65, "desc": "LLM fine-tuning, Agentic AI systems, LangChain/LangGraph & model evaluation"},
+                {"title": "Lead Applied AI Scientist", "completed": False, "desc": "Enterprise GenAI architecture, multi-modal AI models & scalable ML serving"},
+                {"title": "Principal AI Architect", "completed": False, "desc": "Distributed training, foundation model design & cross-functional AI governance"},
+                {"title": "VP of AI & Data Science", "completed": False, "desc": "Strategic AI roadmap, enterprise AI strategy & department leadership"}
+            ]
+        else:
+            return [
+                {"title": "Data Science Apprentice", "completed": True, "desc": "Foundational Python, SQL queries, Pandas & basic data visualization"},
+                {"title": "Junior Data Analyst", "completed": True, "desc": "SQL joins, Power BI/Tableau dashboards & basic statistical tests"},
+                {"title": "Data Analyst / ML Engineer", "completed": ats_score >= 70, "desc": "Predictive modeling, Scikit-learn, feature engineering & automated reporting"},
+                {"title": "Senior Data Scientist", "completed": False, "desc": "Deep Learning models, PyTorch/TensorFlow, NLP & advanced analytics"},
+                {"title": "GenAI / MLOps Architect", "completed": False, "desc": "RAG architecture, LLM orchestration, model monitoring & CI/CD pipelines"},
+                {"title": "Chief Data Officer", "completed": False, "desc": "Organization data strategy, AI transformation & executive leadership"}
+            ]
+            
+    elif clean_domain in ('backend', 'devops', 'backend_devops', 'cloud', 'infrastructure'):
+        return [
+            {"title": "Backend Foundations", "completed": True, "desc": "CLI automation, Python/Node/Java basics, HTTP APIs & SQL databases"},
+            {"title": "Junior Backend Dev", "completed": True, "desc": "REST API development, database indexing, Git operations & Docker containers"},
+            {"title": "Backend Engineer", "completed": ats_score >= 70, "desc": "FastAPI/Express microservices, Redis caching, ORMs & auth systems"},
+            {"title": "Senior Backend Engineer", "completed": False, "desc": "Distributed systems, message queues (Kafka/RabbitMQ) & API gateways"},
+            {"title": "Cloud & Systems Architect", "completed": False, "desc": "Kubernetes clusters, CI/CD automation pipelines & AWS/GCP cloud scaling"},
+            {"title": "VP of Technology / CTO", "completed": False, "desc": "Strategic technology stack, infrastructure security & department vision"}
+        ]
+        
+    elif clean_domain in ('frontend', 'ui', 'mobile'):
+        return [
+            {"title": "Web Foundations", "completed": True, "desc": "HTML5, CSS3, JavaScript ES6+ & responsive UI layouts"},
+            {"title": "Junior Frontend Dev", "completed": True, "desc": "Modern JS/TS, React/Vue components & SPA state management"},
+            {"title": "Frontend Engineer", "completed": ats_score >= 70, "desc": "React/Next.js development, Redux/Zustand state stores & UI frameworks"},
+            {"title": "Senior Frontend Engineer", "completed": False, "desc": "Web performance optimization, SSR/SSG caching & security standards"},
+            {"title": "Frontend Architect", "completed": False, "desc": "Design systems creation, micro-frontends architecture & build tooling"},
+            {"title": "VP of Engineering", "completed": False, "desc": "Department alignment, engineering hiring & technical roadmap"}
+        ]
+        
+    elif clean_domain in ('cybersecurity', 'security'):
+        return [
+            {"title": "Security Foundations", "completed": True, "desc": "Networking fundamentals, Linux CLI, TCP/IP & OS security"},
+            {"title": "Junior Security Analyst", "completed": True, "desc": "Vulnerability scanning, SIEM monitoring & incident logging"},
+            {"title": "Cybersecurity Engineer", "completed": ats_score >= 70, "desc": "Penetration testing, threat modeling, IAM & firewall policies"},
+            {"title": "Senior Security Architect", "completed": False, "desc": "Cloud security, Zero Trust architecture, cryptography & compliance"},
+            {"title": "Head of Information Security", "completed": False, "desc": "Security risk governance, incident response leadership & team management"},
+            {"title": "Chief Information Security Officer (CISO)", "completed": False, "desc": "Executive security strategy, enterprise threat defense & regulatory oversight"}
+        ]
+        
+    else:
+        return [
+            {"title": "Software Foundations", "completed": True, "desc": "Programming logic, data structures, algorithms & version control"},
+            {"title": "Junior Software Eng", "completed": True, "desc": "Writing clean code, unit testing, Git workflows & bug resolution"},
+            {"title": "Software Engineer", "completed": ats_score >= 70, "desc": "Feature engineering, API integrations & system design implementation"},
+            {"title": "Senior Software Eng", "completed": False, "desc": "System architecture, design patterns, security & team code reviews"},
+            {"title": "Tech Lead / Architect", "completed": False, "desc": "High-scale systems design, technology stack evaluation & technical specs"},
+            {"title": "CTO / Director of Eng", "completed": False, "desc": "Strategic technology roadmap, engineering organization & tech leadership"}
+        ]
+
 def analyze_resume_with_heuristics(parsed_resume: Dict[str, Any], job_description: Optional[str] = None) -> Dict[str, Any]:
     """
     Local dynamic analysis logic that computes resume metrics from the actual parsed resume data.
@@ -295,43 +369,6 @@ def analyze_resume_with_heuristics(parsed_resume: Dict[str, Any], job_descriptio
             ],
         }
         suggestions.extend(domain_tips.get(domain, domain_tips['general']))
-            
-    if domain == 'frontend':
-        roadmap = [
-            {"title": "Student", "completed": True, "desc": "HTML, CSS, JS foundations & clean UI layouts"},
-            {"title": "Junior Frontend Dev", "completed": True, "desc": "Modern JS/TS, UI components & basic SPA state management"},
-            {"title": "Frontend Engineer", "completed": ats_score >= 70, "desc": "React/Vue/Angular development, state stores & styling frameworks"},
-            {"title": "Senior Frontend Engineer", "completed": False, "desc": "Web performance tuning, bundle optimization, security & caching patterns"},
-            {"title": "Frontend Architect", "completed": False, "desc": "Design systems creation, micro-frontends architecture & build tooling configs"},
-            {"title": "VP of Engineering", "completed": False, "desc": "Technical leadership, department alignment, hiring & CTO pathway"}
-        ]
-    elif domain == 'backend_devops':
-        roadmap = [
-            {"title": "Student", "completed": True, "desc": "Basic CLI scripts, HTTP requests & simple server building"},
-            {"title": "Junior Backend Dev", "completed": True, "desc": "APIs endpoints writing, basic SQL database queries & git controls"},
-            {"title": "Backend Engineer", "completed": ats_score >= 70, "desc": "FastAPI/Node microservices, indexing, ORMs & auth systems implementation"},
-            {"title": "Senior Backend Engineer", "completed": False, "desc": "Distributed systems, queues, caching stores (Redis) & architecture designs"},
-            {"title": "Cloud / DevOps Lead", "completed": False, "desc": "Kubernetes setups, CI/CD automation pipelines & high-availability hosting"},
-            {"title": "VP of Technology / CTO", "completed": False, "desc": "Strategic technology decisions, scalability oversight & leadership"}
-        ]
-    elif domain == 'data':
-        roadmap = [
-            {"title": "Student", "completed": True, "desc": "Foundational Python, SQL basics & spreadsheets statistics"},
-            {"title": "Junior Analyst", "completed": True, "desc": "Data wrangling, SQL joins, basic reports & dashboards"},
-            {"title": "Data Analyst", "completed": ats_score >= 70, "desc": "Advanced SQL, BI tools (Power BI), KPIs & statistical evaluations"},
-            {"title": "Senior Analyst", "completed": False, "desc": "Predictive analytics models, warehouse modeling (dbt) & business insights"},
-            {"title": "Analytics Engineer", "completed": False, "desc": "ELT pipelines orchestrations, warehouse optimization & modeling standards"},
-            {"title": "AI Engineer / Data Scientist", "completed": False, "desc": "Machine Learning training, LLM fine-tuning, neural nets & production serving"}
-        ]
-    else:
-        roadmap = [
-            {"title": "Student", "completed": True, "desc": "Programming fundamentals, basic algorithms & programming tools"},
-            {"title": "Junior Software Eng", "completed": True, "desc": "Writing clean code, debugging, Git operations & task completions"},
-            {"title": "Software Engineer", "completed": ats_score >= 70, "desc": "Feature development, unit tests, code reviews & design implementation"},
-            {"title": "Senior Software Eng", "completed": False, "desc": "System architecture, API design, security patterns & mentoring team"},
-            {"title": "Tech Lead / Architect", "completed": False, "desc": "Large-scale systems design, technology stack decisions & technical specs"},
-            {"title": "CTO / Director of Eng", "completed": False, "desc": "Strategic roadmap planning, engineering team management & tech vision"}
-        ]
 
     domain_job_templates = {
         'frontend': [
@@ -382,6 +419,7 @@ def analyze_resume_with_heuristics(parsed_resume: Dict[str, Any], job_descriptio
     job_matches.sort(key=lambda x: x["match"], reverse=True)
     improvements = generate_dynamic_improvements(parsed_resume, domain)
     interview_questions = generate_dynamic_interview_questions(skills, domain, parsed_resume)
+    roadmap = generate_personalized_career_roadmap(parsed_resume, domain, ats_score)
 
     return {
         "atsScore": ats_score,

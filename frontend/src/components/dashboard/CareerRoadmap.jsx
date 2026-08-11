@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function CareerRoadmap({ steps = [] }) {
-  // Store selected milestone index for detail display
-  const [selectedIndex, setSelectedIndex] = useState(2); // Default to current milestone
+  // Find current active milestone (first non-completed or last step)
+  const activeIdx = steps.findIndex(s => !s.completed);
+  const initialIdx = activeIdx !== -1 ? activeIdx : (steps.length > 0 ? steps.length - 1 : 0);
+  const [selectedIndex, setSelectedIndex] = useState(initialIdx);
 
   return (
     <div className="bg-white border-3 border-text p-6 sm:p-8 rounded-3xl shadow-[6px_6px_0px_#1F1F1F] select-none text-left w-full">
