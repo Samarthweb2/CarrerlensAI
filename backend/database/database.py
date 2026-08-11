@@ -13,9 +13,13 @@ if DATABASE_URL.startswith("postgresql://"):
 elif DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+psycopg2://", 1)
 
-connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
+if DATABASE_URL.startswith("sqlite"):
+    connect_args = {"check_same_thread": False}
+else:
+    # Neon and most cloud PostgreSQL providers require SSL
+    connect_args = {"sslmode": "require"}
 
-# pool_pre_ping ensures stale PostgreSQL connections are recycled on Render
+# pool_pre_ping ensures stale PostgreSQL connections are recycled
 engine = create_engine(DATABASE_URL, connect_args=connect_args, pool_pre_ping=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
