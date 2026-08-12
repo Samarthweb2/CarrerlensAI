@@ -228,125 +228,65 @@ def generate_personalized_career_roadmap(
 ) -> List[Dict[str, Any]]:
     """
     Generates a personalized, skill-gap-driven 6-step career roadmap tailored to the
-    candidate's actual resume content, detected domain, and market-frequency missing skills.
+    candidate's actual resume content, detected domain, and market-frequency missing skills,
+    pulling from the complete roadmap.sh taxonomy.
     """
-    skills = [s.strip() for s in parsed_resume.get("skills", []) if isinstance(s, str)]
-    skills_str = ", ".join(skills[:3]) if skills else "core programming"
-    clean_domain = (domain or 'general').lower().replace('_', ' ').title()
+    from services.ai.roadmap_sh_taxonomy import ROADMAP_SH_TAXONOMY, DEFAULT_ROADMAP_SH
+
+    # Normalize legacy domain keys
+    domain_alias_map = {
+        'genai_agentic': 'ai_engineer',
+        'data_science_ml': 'ai_data_scientist',
+        'data': 'ai_data_scientist',
+        'data_engineering': 'data_engineer',
+        'de': 'data_engineer',
+        'backend_systems': 'backend',
+        'frontend_ui': 'frontend',
+        'fullstack': 'full_stack',
+        'devops_sre': 'devops',
+        'mobile_dev': 'android',
+        'cybersecurity': 'cyber_security',
+        'embedded_iot': 'backend',
+        'qa_automation': 'qa',
+        'general': 'full_stack'
+    }
+
+    raw_domain = (domain or 'full_stack').lower().strip()
+    clean_domain = domain_alias_map.get(raw_domain, raw_domain)
     
-    # Build missing skills context for roadmap descriptions
+    tax_info = ROADMAP_SH_TAXONOMY.get(clean_domain, DEFAULT_ROADMAP_SH)
+    roadmap_url = tax_info.get("url", "https://roadmap.sh/roadmaps")
+    raw_milestones = tax_info.get("milestones", [])
+
     ms_str = ""
     if missing_skills and len(missing_skills) >= 1:
         ms_str = ", ".join(missing_skills[:3])
-    
-    if clean_domain in ('genai_agentic', 'genai', 'agentic'):
-        return [
-            {"title": "AI & Python Foundations", "completed": True, "desc": f"Python, SQL, PyTorch basics, Git & API integrations"},
-            {"title": "Applied ML & Deep Learning Engineer", "completed": True, "desc": "Transformers, HuggingFace, Scikit-learn & model evaluation"},
-            {"title": "GenAI & RAG Specialist", "completed": ats_score >= 65, "desc": f"RAG architectures, Vector DBs (Qdrant/Pinecone), LangChain & LlamaIndex{f'. Focus: {ms_str}' if ms_str else ''}"},
-            {"title": "Agentic Systems Architect", "completed": False, "desc": "LangGraph multi-agent orchestration, tool calling & evaluation benchmarks"},
-            {"title": "Senior LLMOps / AI Systems Lead", "completed": False, "desc": "Fine-tuning (LoRA/QLoRA), vLLM serving, quantization & distributed inference"},
-            {"title": "Principal AI Architect / VP of AI", "completed": False, "desc": "Enterprise GenAI governance, multi-modal AI models & strategic AI roadmap"}
-        ]
-    elif clean_domain in ('data_engineering', 'de', 'big_data'):
-        return [
-            {"title": "SQL & Python Data Foundations", "completed": True, "desc": "Advanced SQL queries, Python scripting, Relational DBs & Linux CLI"},
-            {"title": "Junior Data Engineer", "completed": True, "desc": "ETL scripting, Data Warehousing, Data Modeling & Airflow DAGs"},
-            {"title": "Data Engineer", "completed": ats_score >= 70, "desc": f"PySpark distributed computing, dbt transformations, Snowflake & BigQuery{f'. Learn: {ms_str}' if ms_str else ''}"},
-            {"title": "Senior Data Engineer", "completed": False, "desc": "Delta Lake, Apache Iceberg, Kafka stream processing & Data Mesh design"},
-            {"title": "Big Data & Cloud Architect", "completed": False, "desc": "Real-time streaming infrastructure, cloud data platform governance & SLA optimization"},
-            {"title": "Head of Data Infrastructure / CDO", "completed": False, "desc": "Enterprise data strategy, executive leadership & organization data roadmap"}
-        ]
-    elif clean_domain in ('data_science_ml', 'data', 'ai', 'ml', 'data science', 'data_science'):
-        return [
-            {"title": "Junior Data Analyst / Engineer", "completed": True, "desc": f"Python, SQL, Pandas, NumPy, data wrangling & exploratory analysis"},
-            {"title": "Data Scientist", "completed": True, "desc": f"Production ML models, Scikit-Learn, statistical modeling & feature engineering"},
-            {"title": "Senior Data Scientist", "completed": ats_score >= 70, "desc": f"Deep Learning with PyTorch/TensorFlow, NLP pipelines & advanced analytics{f'. Skill gaps: {ms_str}' if ms_str else ''}"},
-            {"title": "ML Engineer / Applied AI", "completed": False, "desc": "End-to-end ML systems, model serving (MLflow/BentoML), experiment tracking & CI/CD for ML"},
-            {"title": "ML / AI Architect", "completed": False, "desc": "Distributed training, foundation model design, scalable inference & AI governance"},
-            {"title": "VP of AI & Data Science", "completed": False, "desc": "Strategic AI roadmap, enterprise AI strategy & department leadership"}
-        ]
-    elif clean_domain in ('backend_systems', 'backend'):
-        return [
-            {"title": "Backend Foundations", "completed": True, "desc": "CLI automation, Python/Node/Java basics, HTTP APIs & SQL databases"},
-            {"title": "Junior Backend Dev", "completed": True, "desc": "REST API development, database indexing, Git operations & Docker containers"},
-            {"title": "Backend Engineer", "completed": ats_score >= 70, "desc": "FastAPI/Express microservices, Redis caching, ORMs & auth systems"},
-            {"title": "Senior Backend Engineer", "completed": False, "desc": "Distributed systems, message queues (Kafka/RabbitMQ) & gRPC gateways"},
-            {"title": "Cloud & Systems Architect", "completed": False, "desc": "Kubernetes clusters, CI/CD automation pipelines & AWS/GCP cloud scaling"},
-            {"title": "VP of Technology / CTO", "completed": False, "desc": "Strategic technology stack, infrastructure security & department vision"}
-        ]
-    elif clean_domain in ('frontend_ui', 'frontend', 'ui'):
-        return [
-            {"title": "Web Foundations", "completed": True, "desc": "HTML5, CSS3, JavaScript ES6+ & responsive UI layouts"},
-            {"title": "Junior Frontend Dev", "completed": True, "desc": "Modern JS/TS, React/Vue components & SPA state management"},
-            {"title": "Frontend Engineer", "completed": ats_score >= 70, "desc": "React/Next.js development, Redux/Zustand state stores & Tailwind CSS"},
-            {"title": "Senior Frontend Engineer", "completed": False, "desc": "Web performance optimization, SSR/SSG caching & security standards"},
-            {"title": "Frontend Architect", "completed": False, "desc": "Design systems creation, micro-frontends architecture & build tooling"},
-            {"title": "VP of Engineering", "completed": False, "desc": "Department alignment, engineering hiring & technical roadmap"}
-        ]
-    elif clean_domain in ('fullstack', 'full_stack'):
-        return [
-            {"title": "Web & Database Foundations", "completed": True, "desc": "HTML/CSS, JavaScript, SQL databases & Git version control"},
-            {"title": "Junior Full-Stack Dev", "completed": True, "desc": "React UI components, Node/Python REST APIs & CRUD database operations"},
-            {"title": "Full-Stack Engineer", "completed": ats_score >= 70, "desc": "Next.js/React frontend + FastAPI/Node backend + PostgreSQL & Docker"},
-            {"title": "Senior Full-Stack Architect", "completed": False, "desc": "End-to-end system design, microservices, Caching & Cloud deployments"},
-            {"title": "Staff Software Engineer", "completed": False, "desc": "High-scale architecture, cross-team technical leadership & security standards"},
-            {"title": "VP of Product Engineering / CTO", "completed": False, "desc": "Product tech roadmap, engineering org leadership & executive alignment"}
-        ]
-    elif clean_domain in ('devops_sre', 'devops', 'sre', 'cloud'):
-        return [
-            {"title": "Systems & Scripting Foundations", "completed": True, "desc": "Linux CLI, Bash/Python scripting, TCP/IP networking & Git"},
-            {"title": "Junior DevOps Engineer", "completed": True, "desc": "Docker containerization, CI/CD pipeline automation & cloud CLI tools"},
-            {"title": "DevOps / SRE Engineer", "completed": ats_score >= 70, "desc": "Kubernetes cluster management, Terraform IaC, AWS/GCP & Helm charts"},
-            {"title": "Senior Cloud / SRE Architect", "completed": False, "desc": "Prometheus/Grafana observability, zero-downtime deployments & SLOs"},
-            {"title": "Head of Infrastructure & Reliability", "completed": False, "desc": "Multi-region cloud infrastructure, disaster recovery & security compliance"},
-            {"title": "VP of Infrastructure / CTO", "completed": False, "desc": "Infrastructure cost optimization, organization DevOps strategy & leadership"}
-        ]
-    elif clean_domain in ('mobile_dev', 'mobile'):
-        return [
-            {"title": "Mobile Programming Foundations", "completed": True, "desc": "Dart/JavaScript/Swift basics, OOP & mobile UI concepts"},
-            {"title": "Junior Mobile Developer", "completed": True, "desc": "Flutter/React Native layouts, REST API consumption & mobile state management"},
-            {"title": "Mobile Engineer", "completed": ats_score >= 70, "desc": "Cross-platform mobile apps, native modules, offline storage & CI/CD publishing"},
-            {"title": "Senior Mobile Architect", "completed": False, "desc": "Mobile app security, performance tuning, native iOS/Android optimizations"},
-            {"title": "Lead Mobile Architect", "completed": False, "desc": "Design systems for mobile, SDK architecture & app store deployment pipelines"},
-            {"title": "VP of Mobile Engineering", "completed": False, "desc": "Mobile product strategy, engineering team growth & platform technical vision"}
-        ]
-    elif clean_domain in ('cybersecurity', 'security'):
-        return [
-            {"title": "Security Foundations", "completed": True, "desc": "Networking fundamentals, Linux CLI, TCP/IP & OS security"},
-            {"title": "Junior Security Analyst", "completed": True, "desc": "Vulnerability scanning, SIEM monitoring & incident logging"},
-            {"title": "Cybersecurity Engineer", "completed": ats_score >= 70, "desc": "Penetration testing, threat modeling, IAM & firewall policies"},
-            {"title": "Senior Security Architect", "completed": False, "desc": "Cloud security, Zero Trust architecture, cryptography & compliance"},
-            {"title": "Head of Information Security", "completed": False, "desc": "Security risk governance, incident response leadership & team management"},
-            {"title": "Chief Information Security Officer (CISO)", "completed": False, "desc": "Executive security strategy, enterprise threat defense & regulatory oversight"}
-        ]
-    elif clean_domain in ('embedded_iot', 'embedded', 'iot'):
-        return [
-            {"title": "Hardware & C Foundations", "completed": True, "desc": "C/C++ programming, digital logic, data structures & electronics basics"},
-            {"title": "Junior Embedded Engineer", "completed": True, "desc": "Microcontroller programming (STM32/ESP32), GPIO, UART/SPI/I2C protocols"},
-            {"title": "Embedded Systems Engineer", "completed": ats_score >= 70, "desc": "FreeRTOS multitasking, device driver development & hardware debugging"},
-            {"title": "Senior Embedded Architect", "completed": False, "desc": "Linux Kernel driver development, IoT security protocols (MQTT/TLS) & power tuning"},
-            {"title": "Principal Firmware Architect", "completed": False, "desc": "System-on-Chip (SoC) architecture, hardware-software co-design & Board bring-up"},
-            {"title": "VP of Embedded Systems", "completed": False, "desc": "Hardware product roadmap, manufacturing alignment & department leadership"}
-        ]
-    elif clean_domain in ('qa_automation', 'qa', 'testing'):
-        return [
-            {"title": "Testing Foundations", "completed": True, "desc": "Software QA fundamentals, test planning, manual testing & bug tracking"},
-            {"title": "Junior Automation Engineer", "completed": True, "desc": "Python/JS test scripting, Selenium/Playwright basics & API testing (Postman)"},
-            {"title": "QA Automation Engineer", "completed": ats_score >= 70, "desc": "Cypress/Playwright E2E frameworks, PyTest automation & CI pipeline integration"},
-            {"title": "Senior Test Architect", "completed": False, "desc": "Performance & load testing (JMeter), visual regression & test infrastructure"},
-            {"title": "Head of Quality Engineering", "completed": False, "desc": "Organization quality governance, automation strategy & release management"},
-            {"title": "VP of Quality Assurance", "completed": False, "desc": "Executive QA strategy, continuous deployment quality & department leadership"}
-        ]
-    else:
-        return [
-            {"title": "Software Foundations", "completed": True, "desc": "Programming logic, data structures, algorithms & version control"},
-            {"title": "Junior Software Eng", "completed": True, "desc": "Writing clean code, unit testing, Git workflows & bug resolution"},
-            {"title": "Software Engineer", "completed": ats_score >= 70, "desc": "Feature engineering, API integrations & system design implementation"},
-            {"title": "Senior Software Eng", "completed": False, "desc": "System architecture, design patterns, security & team code reviews"},
-            {"title": "Tech Lead / Architect", "completed": False, "desc": "High-scale systems design, technology stack evaluation & technical specs"},
-            {"title": "CTO / Director of Eng", "completed": False, "desc": "Strategic technology roadmap, engineering organization & tech leadership"}
-        ]
+
+    roadmap = []
+    for idx, ms in enumerate(raw_milestones):
+        # Determine completion status based on step index and candidate ATS score
+        if idx == 0:
+            is_completed = True
+        elif idx == 1:
+            is_completed = ats_score >= 50
+        elif idx == 2:
+            is_completed = ats_score >= 70
+        else:
+            is_completed = False
+
+        desc_text = ms.get("desc", "")
+        if idx == 2 and ms_str:
+            desc_text += f" (Focus gap: {ms_str})"
+
+        roadmap.append({
+            "title": ms.get("title", f"Level {idx + 1}"),
+            "completed": is_completed,
+            "desc": desc_text,
+            "roadmapUrl": roadmap_url,
+            "category": tax_info.get("category", "Career Path")
+        })
+
+    return roadmap
 
 def analyze_resume_with_heuristics(parsed_resume: Dict[str, Any], job_description: Optional[str] = None, missing_skills: Optional[List[str]] = None) -> Dict[str, Any]:
     """

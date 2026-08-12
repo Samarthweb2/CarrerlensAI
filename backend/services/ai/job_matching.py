@@ -46,53 +46,36 @@ def format_salary_range(salary_min: Optional[int], salary_max: Optional[int]) ->
 
 def detect_candidate_domain(skills_lower: set) -> str:
     """
-    Detects candidate's primary technical domain across 11 specialized technology domains.
+    Detects candidate's primary domain across 30+ tech and non-tech domains
+    aligned with the complete roadmap.sh dataset.
     """
-    scores = {
-        'genai_agentic': 0.0,
-        'data_science_ml': 0.0,
-        'data_engineering': 0.0,
-        'backend_systems': 0.0,
-        'frontend_ui': 0.0,
-        'fullstack': 0.0,
-        'devops_sre': 0.0,
-        'mobile_dev': 0.0,
-        'cybersecurity': 0.0,
-        'embedded_iot': 0.0,
-        'qa_automation': 0.0
-    }
+    try:
+        from services.ai.roadmap_sh_taxonomy import ROADMAP_SH_TAXONOMY
+        domain_tax = ROADMAP_SH_TAXONOMY
+    except ImportError:
+        domain_tax = {}
 
-    genai_kw = {'langchain', 'langgraph', 'llamaindex', 'rag', 'agentic ai', 'multi-agent systems', 'multi-agent', 'llm', 'llms', 'prompt engineering', 'crewai', 'autogen', 'vector databases', 'pinecone', 'qdrant', 'fine-tuning', 'lora', 'vllm'}
-    ds_kw = {'pytorch', 'tensorflow', 'scikit-learn', 'machine learning', 'deep learning', 'nlp', 'computer vision', 'pandas', 'numpy', 'statistical modeling', 'transformers', 'data science', 'data scientist'}
-    de_kw = {'pyspark', 'spark', 'dbt', 'airflow', 'snowflake', 'bigquery', 'delta lake', 'apache iceberg', 'kafka', 'etl pipelines', 'etl', 'data engineering', 'data engineer', 'databricks'}
-    backend_kw = {'fastapi', 'node.js', 'express.js', 'django', 'flask', 'go', 'rust', 'java', 'spring boot', 'postgresql', 'mongodb', 'redis', 'grpc', 'graphql', 'rabbitmq', 'rest api', 'microservices'}
-    frontend_kw = {'react', 'next.js', 'typescript', 'javascript', 'html5', 'css3', 'tailwind css', 'redux', 'zustand', 'vite', 'vue', 'angular', 'webpack', 'frontend', 'ui/ux'}
-    fullstack_kw = {'next.js', 'fastapi', 'react', 'node.js', 'fullstack', 'full stack', 'express.js', 'typescript', 'postgresql'}
-    devops_kw = {'docker', 'kubernetes', 'terraform', 'aws', 'gcp', 'azure', 'ci/cd', 'prometheus', 'grafana', 'ansible', 'helm', 'linux', 'devops', 'sre'}
-    mobile_kw = {'flutter', 'react native', 'swift', 'kotlin', 'ios', 'android', 'expo', 'mobile'}
-    sec_kw = {'penetration testing', 'siem', 'threat modeling', 'cryptography', 'burp suite', 'cybersecurity', 'wireshark', 'owasp'}
-    embedded_kw = {'c', 'c++', 'rtos', 'microcontrollers', 'stm32', 'esp32', 'freertos', 'embedded', 'iot'}
-    qa_kw = {'cypress', 'playwright', 'selenium', 'pytest', 'junit', 'postman', 'qa', 'testing', 'automation'}
+    if not domain_tax:
+        return 'full_stack'
+
+    scores = {domain_key: 0.0 for domain_key in domain_tax.keys()}
 
     for sk in skills_lower:
-        if sk in genai_kw: scores['genai_agentic'] += 3.0
-        if sk in ds_kw: scores['data_science_ml'] += 2.0
-        if sk in de_kw: scores['data_engineering'] += 2.5
-        if sk in backend_kw: scores['backend_systems'] += 1.5
-        if sk in frontend_kw: scores['frontend_ui'] += 1.5
-        if sk in fullstack_kw: scores['fullstack'] += 2.5
-        if sk in devops_kw: scores['devops_sre'] += 2.0
-        if sk in mobile_kw: scores['mobile_dev'] += 2.5
-        if sk in sec_kw: scores['cybersecurity'] += 3.0
-        if sk in embedded_kw: scores['embedded_iot'] += 3.0
-        if sk in qa_kw: scores['qa_automation'] += 2.5
+        sk_clean = sk.lower().strip()
+        for domain_key, info in domain_tax.items():
+            kws = info.get("keywords", set())
+            if sk_clean in kws:
+                # Add higher weight for explicit domain keywords
+                weight = 3.0 if domain_key in ('ai_engineer', 'ai_data_scientist', 'product_manager', 'cyber_security') else 2.0
+                scores[domain_key] += weight
 
     best_domain = max(scores.items(), key=lambda x: x[1])
     if best_domain[1] == 0.0:
-        return 'general'
+        return 'full_stack'
     return best_domain[0]
 
 # Backward-compatibility alias for heuristics.py
+detect_domain_weighted = detect_candidate_domain
 detect_domain_weighted = detect_candidate_domain
 
 def extract_ranking_features(tech_user_skills: Set[str], candidate_text: str, candidate_domain: str, role: Any) -> Dict[str, float]:

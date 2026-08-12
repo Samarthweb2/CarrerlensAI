@@ -7,14 +7,33 @@ export default function CareerRoadmap({ steps = [] }) {
   const initialIdx = activeIdx !== -1 ? activeIdx : (steps.length > 0 ? steps.length - 1 : 0);
   const [selectedIndex, setSelectedIndex] = useState(initialIdx);
 
+  const activeStep = steps[selectedIndex] || steps[0];
+  const roadmapUrl = activeStep?.roadmapUrl || (steps.find(s => s.roadmapUrl)?.roadmapUrl) || "https://roadmap.sh/roadmaps";
+
   return (
     <div className="bg-white border-3 border-text p-6 sm:p-8 rounded-3xl shadow-[6px_6px_0px_#1F1F1F] select-none text-left w-full">
-      <h3 className="text-sm font-black text-text uppercase tracking-wider mb-2 flex items-center gap-2">
-        <span>🗺️</span> Interactive Career Roadmap
-      </h3>
-      <p className="text-xs font-bold text-text-light mb-8">
-        Click on milestones to see skill requirements and scope.
-      </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+        <div>
+          <h3 className="text-sm font-black text-text uppercase tracking-wider mb-1 flex items-center gap-2">
+            <span>🗺️</span> Interactive Career Roadmap
+          </h3>
+          <p className="text-xs font-bold text-text-light">
+            Click on milestones to see skill requirements and career progression.
+          </p>
+        </div>
+
+        {roadmapUrl && (
+          <a
+            href={roadmapUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-yellow-100 hover:bg-yellow-200 border-2 border-text text-text font-black text-xs rounded-xl shadow-[2px_2px_0px_#1F1F1F] transition-all hover:translate-x-0.5 hover:translate-y-0.5"
+          >
+            <span>🚀 Official roadmap.sh Guide</span>
+            <span className="text-[10px]">↗</span>
+          </a>
+        )}
+      </div>
 
       {/* Horizontal roadmap container with overflow auto */}
       <div className="w-full overflow-x-auto pb-4 mb-6">
@@ -79,14 +98,28 @@ export default function CareerRoadmap({ steps = [] }) {
             transition={{ duration: 0.2 }}
             className="flex flex-col gap-1"
           >
-            <div className="flex items-center gap-2 mb-1.5">
-              <span className="bg-secondary/15 border border-secondary/35 text-secondary text-[10px] font-black px-2 py-0.5 rounded">
-                Tier {selectedIndex + 1}
-              </span>
-              <span className="text-xs font-black text-text-light">•</span>
-              <span className="text-xs font-black text-text-light uppercase tracking-wider">
-                {steps[selectedIndex]?.completed ? 'Completed Milestone' : 'Target Career Path'}
-              </span>
+            <div className="flex items-center justify-between gap-2 mb-1.5">
+              <div className="flex items-center gap-2">
+                <span className="bg-secondary/15 border border-secondary/35 text-secondary text-[10px] font-black px-2 py-0.5 rounded">
+                  Tier {selectedIndex + 1}
+                </span>
+                <span className="text-xs font-black text-text-light">•</span>
+                <span className="text-xs font-black text-text-light uppercase tracking-wider">
+                  {steps[selectedIndex]?.completed ? 'Completed Milestone' : 'Target Career Path'}
+                </span>
+              </div>
+
+              {roadmapUrl && (
+                <a
+                  href={roadmapUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[11px] font-black text-secondary hover:underline flex items-center gap-1"
+                >
+                  <span>Explore topic roadmap</span>
+                  <span>↗</span>
+                </a>
+              )}
             </div>
             
             <h4 className="text-sm font-black text-text">
