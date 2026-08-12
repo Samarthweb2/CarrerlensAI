@@ -20,8 +20,9 @@
 ## 🌟 Core Features
 
 - 📄 **Multi-Format Resume Parsing**: Automatically extracts text, contact info, education, work experience, projects, and skills from PDF and DOCX files.
-- 🎯 **Domain-Aware Job Matching**: Classifies candidates into technical domains (*Frontend, Backend, Data, DevOps, Mobile, Cybersecurity*) and queries relevant jobs from a database of 115,000+ real LinkedIn postings.
-- 📐 **Set-Based Jaccard & Coverage Scoring**: Evaluates candidate skill sets against real job postings using set theory ($Jaccard + Coverage$) for realistic, non-clustered match percentages (52% – 94%).
+- 🎯 **30+ Domain Multi-Role Classification**: Detects candidate domains across 30+ technical AND non-technical roles (*AI & Data Scientist, AI Engineer, Data Engineer, Product Manager, UX Designer, Technical Writer, Engineering Manager, DevRel, Backend, Frontend, DevOps, Cyber Security*).
+- 🗺️ **roadmap.sh Dataset Integration**: Generates 6-step industry-standard career ladders aligned with the official [roadmap.sh](https://roadmap.sh) curriculum dataset, complete with direct interactive guide links (`https://roadmap.sh/<role>`).
+- 📐 **Engine v2 Quantitative Job Ranking**: Evaluates candidate skill sets against real job postings from a database of 115,000+ LinkedIn postings using weighted feature ranking (Skill Coverage, Title Similarity, Domain Alignment, Seniority Gap) yields realistic match percentages (52% – 95%).
 - 🛠️ **Pure Technical Skill Gap Analysis**: Automatically filters out soft skills (*Communication, Leadership, Teamwork*) to identify true technical skill deficiencies required by industry roles.
 - 📊 **Dynamic ATS Scoring & Breakdown**: Computes instant ATS compatibility scores based on section completeness, formatting quality, and keyword density.
 - 🤖 **Gemini AI Enhancement Layer**: Leverages Google Gemini 1.5/2.5 Flash to generate personalized resume bullet rewrites (*Before vs. After*) and tailored mock interview questions without overriding database job search results.
