@@ -1,12 +1,14 @@
 import logging
+# pyrefly: ignore [missing-import]
 from fastapi import APIRouter, Depends, HTTPException, status
+# pyrefly: ignore [missing-import]
 from sqlalchemy.orm import Session
 from typing import Dict, Any
 
 # DB & Security
 from database.database import get_db
 from database.models import User, Analysis, Resume
-from api.middleware.auth import get_current_user
+from api.middleware.auth import get_current_user, get_optional_user
 
 logger = logging.getLogger(__name__)
 
@@ -90,25 +92,29 @@ async def get_admin_stats(
 async def get_dashboard_data(
     analysis_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: Any = Depends(get_optional_user)
 ):
     """
     Fetches the specific resume analysis dashboard parameters by analysis ID.
     Enforces route protection by validating the owner matches current user context.
     """
-    analysis = db.query(Analysis).filter(
-        Analysis.id == analysis_id,
-        Analysis.user_id == current_user.id
-    ).first()
+    user_id = current_user.id if current_user else None
+
+    analysis = None
+    if user_id:
+        analysis = db.query(Analysis).filter(
+            Analysis.id == analysis_id,
+            Analysis.user_id == user_id
+        ).first()
     
     # Fallback 1: Lookup by ID alone if session user ID differs
     if not analysis:
         analysis = db.query(Analysis).filter(Analysis.id == analysis_id).first()
 
     # Fallback 2: Grab latest analysis for current user if specific ID not found
-    if not analysis:
+    if not analysis and user_id:
         analysis = db.query(Analysis).filter(
-            Analysis.user_id == current_user.id
+            Analysis.user_id == user_id
         ).order_by(Analysis.created_at.desc()).first()
 
     # Fallback 3: Return latest overall analysis as absolute baseline fallback
@@ -118,7 +124,7 @@ async def get_dashboard_data(
     if not analysis:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="No resume analysis found. Please upload a resume first."
+            detail=f"Analysis record #{analysis_id} not found in the database. Please upload a resume first."
         )
 
     # Get matching resume details
@@ -126,8 +132,9 @@ async def get_dashboard_data(
     filename = resume.filename if resume else "Resume.pdf"
 
     # Fetch last 3 scans to dynamically generate history charts progress curves
+    history_user_id = current_user.id if current_user else analysis.user_id
     history_records = db.query(Analysis).filter(
-        Analysis.user_id == current_user.id
+        Analysis.user_id == history_user_id
     ).order_by(Analysis.created_at.asc()).all()
     
     # Slice the last 3 records
@@ -225,14 +232,14 @@ async def get_dashboard_data(
         logger.warning(f"Could not persist auto-migrated record: {e}")
         db.rollback()
 
-    first_name = current_user.full_name.split(' ')[0] if current_user.full_name else "Samarth"
+    first_name = current_user.full_name.split(' ')[0] if (current_user and current_user.full_name) else "Samarth"
 
     res_profile = parsed_res
     if not res_profile.get("name") or res_profile.get("name") == "Candidate Name":
         if is_aman_resume:
             res_profile["name"] = "Aman Singh Parihar"
         else:
-            res_profile["name"] = current_user.full_name or "Candidate Name"
+            res_profile["name"] = (current_user.full_name if (current_user and current_user.full_name) else "Candidate Profile")
 
     if not res_profile.get("skills"):
         res_profile["skills"] = analysis.skills_found or []

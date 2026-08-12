@@ -22,7 +22,11 @@ export default function Dashboard({ onNavigate }) {
       }
     } catch (err) {
       console.error(err);
-      setError(err.response?.data?.detail || "Failed to load dashboard data. Ensure the FastAPI backend is running.");
+      if (err.response?.status === 401) {
+        setError("Session expired or user context missing. Please log in to access your dashboard.");
+      } else {
+        setError(err.response?.data?.detail || "Failed to load dashboard data. Ensure the FastAPI backend is running.");
+      }
     } finally {
       setLoading(false);
     }
@@ -54,6 +58,7 @@ export default function Dashboard({ onNavigate }) {
   }
 
   if (error) {
+    const isAuthError = error.toLowerCase().includes("log in") || error.toLowerCase().includes("session");
     return (
       <div className="min-h-screen bg-cream flex flex-col items-center justify-center text-center p-8 select-none">
         <div className="text-5xl mb-4">⚠️</div>
@@ -67,10 +72,10 @@ export default function Dashboard({ onNavigate }) {
             Retry Loading
           </button>
           <button
-            onClick={() => onNavigate('/upload')}
+            onClick={() => onNavigate(isAuthError ? '/login' : '/upload')}
             className="px-5 py-2.5 bg-white border-2 border-card-border hover:border-text text-xs font-black rounded-xl text-text cursor-pointer transition-colors"
           >
-            Go Upload Resume
+            {isAuthError ? 'Go to Login' : 'Go Upload Resume'}
           </button>
         </div>
       </div>

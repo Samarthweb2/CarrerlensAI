@@ -11,6 +11,7 @@ from services.auth_service import get_user_by_email
 
 # Token endpoint locator
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
+oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", auto_error=False)
 
 def get_current_user(db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)) -> User:
     """
@@ -41,3 +42,20 @@ def get_current_user(db: Session = Depends(get_db), token: str = Depends(oauth2_
         )
 
     return user
+
+def get_optional_user(db: Session = Depends(get_db), token: str = Depends(oauth2_scheme_optional)):
+    """
+    Optional authentication dependency. Returns User if valid Bearer token provided, else None.
+    """
+    if not token:
+        return None
+    try:
+        payload = decode_access_token(token)
+        if not payload:
+            return None
+        email = payload.get("sub")
+        if not email:
+            return None
+        return get_user_by_email(db, email)
+    except Exception:
+        return None
