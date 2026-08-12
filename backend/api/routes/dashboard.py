@@ -243,14 +243,12 @@ async def get_dashboard_data(
         from services.ai.job_matching import detect_candidate_domain
         from services.ai.heuristics import generate_personalized_career_roadmap
 
+        # Only use extracted skills for domain detection — NOT raw resume text words
         skills_lower = set([s.lower() for s in skills_found_list if isinstance(s, str)])
-        if isinstance(parsed_res, dict) and parsed_res.get("text") and isinstance(parsed_res["text"], str):
-            for word in parsed_res["text"].lower().split():
-                skills_lower.add(word)
-                
+
         detected_domain = detect_candidate_domain(skills_lower)
         if is_aman_resume:
-            detected_domain = 'data'
+            detected_domain = 'data_science_ml'
 
         current_roadmap = analysis.roadmap or []
         has_generic_roadmap = (
@@ -258,19 +256,28 @@ async def get_dashboard_data(
             any(
                 any(kw in step.get("title", "") for kw in [
                     "Software Engineer", "Software Eng", "Student", "Junior Engineer",
-                    "Mid-Level Professional", "Senior Professional", "Lead / Architect"
+                    "Mid-Level Professional", "Senior Professional", "Lead / Architect",
+                    "Market Priority Skill", "Applied Data Science", "Foundations"
                 ])
                 for step in current_roadmap if isinstance(step, dict)
             )
         )
 
-        if has_generic_roadmap or detected_domain == 'data':
-            current_roadmap = generate_personalized_career_roadmap(parsed_res, detected_domain, analysis.ats_score)
+        needs_update = False
+        if has_generic_roadmap or detected_domain in ('data', 'data_science_ml'):
+            current_roadmap = generate_personalized_career_roadmap(
+                parsed_res, 
+                detected_domain, 
+                analysis.ats_score,
+                missing_skills=analysis.missing_skills or []
+            )
             analysis.roadmap = current_roadmap
+            needs_update = True
 
-        analysis.parsed_resume = parsed_res
-        db.add(analysis)
-        db.commit()
+        if needs_update or getattr(analysis, "parsed_resume", None) != parsed_res:
+            analysis.parsed_resume = parsed_res
+            db.add(analysis)
+            db.commit()
     except Exception as e:
         logger.warning(f"Could not persist auto-migrated record: {e}")
         db.rollback()

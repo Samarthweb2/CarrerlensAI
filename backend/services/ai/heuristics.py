@@ -234,50 +234,16 @@ def generate_personalized_career_roadmap(
     skills_str = ", ".join(skills[:3]) if skills else "core programming"
     clean_domain = (domain or 'general').lower().replace('_', ' ').title()
     
-    # If explicit missing skills from market dataset exist, build a truly personalized roadmap
+    # Build missing skills context for roadmap descriptions
+    ms_str = ""
     if missing_skills and len(missing_skills) >= 1:
-        ms1 = missing_skills[0]
-        ms2 = missing_skills[1] if len(missing_skills) > 1 else "Cloud Deployments"
-        ms3 = missing_skills[2] if len(missing_skills) > 2 else "System Architecture"
-        
-        return [
-            {
-                "title": f"{clean_domain} Foundations",
-                "completed": True,
-                "desc": f"Mastered baseline tech stack including {skills_str} and core version control."
-            },
-            {
-                "title": f"Applied {clean_domain} Developer",
-                "completed": True,
-                "desc": "Shipped production applications and implemented REST APIs/data models in enterprise environments."
-            },
-            {
-                "title": f"Market Priority Skill: {ms1}",
-                "completed": ats_score >= 80,
-                "desc": f"Acquire market-demanded skill '{ms1}' identified from dataset role analysis."
-            },
-            {
-                "title": f"Advanced Specialization: {ms2}",
-                "completed": False,
-                "desc": f"Master '{ms2}' to bridge candidate gap and meet top 10% market requirements."
-            },
-            {
-                "title": f"Enterprise Architecture & {ms3}",
-                "completed": False,
-                "desc": f"Architect end-to-end solutions incorporating '{ms3}' and scalable system design."
-            },
-            {
-                "title": f"Senior {clean_domain} Architect / Tech Lead",
-                "completed": False,
-                "desc": "Lead cross-functional engineering teams, drive technical strategy & platform vision."
-            }
-        ]
+        ms_str = ", ".join(missing_skills[:3])
     
     if clean_domain in ('genai_agentic', 'genai', 'agentic'):
         return [
-            {"title": "AI & Python Foundations", "completed": True, "desc": "Python, SQL, PyTorch basics, Git & API integrations"},
+            {"title": "AI & Python Foundations", "completed": True, "desc": f"Python, SQL, PyTorch basics, Git & API integrations"},
             {"title": "Applied ML & Deep Learning Engineer", "completed": True, "desc": "Transformers, HuggingFace, Scikit-learn & model evaluation"},
-            {"title": "GenAI & RAG Specialist", "completed": ats_score >= 65, "desc": "RAG architectures, Vector DBs (Qdrant/Pinecone), LangChain & LlamaIndex"},
+            {"title": "GenAI & RAG Specialist", "completed": ats_score >= 65, "desc": f"RAG architectures, Vector DBs (Qdrant/Pinecone), LangChain & LlamaIndex{f'. Focus: {ms_str}' if ms_str else ''}"},
             {"title": "Agentic Systems Architect", "completed": False, "desc": "LangGraph multi-agent orchestration, tool calling & evaluation benchmarks"},
             {"title": "Senior LLMOps / AI Systems Lead", "completed": False, "desc": "Fine-tuning (LoRA/QLoRA), vLLM serving, quantization & distributed inference"},
             {"title": "Principal AI Architect / VP of AI", "completed": False, "desc": "Enterprise GenAI governance, multi-modal AI models & strategic AI roadmap"}
@@ -286,18 +252,18 @@ def generate_personalized_career_roadmap(
         return [
             {"title": "SQL & Python Data Foundations", "completed": True, "desc": "Advanced SQL queries, Python scripting, Relational DBs & Linux CLI"},
             {"title": "Junior Data Engineer", "completed": True, "desc": "ETL scripting, Data Warehousing, Data Modeling & Airflow DAGs"},
-            {"title": "Data Engineer", "completed": ats_score >= 70, "desc": "PySpark distributed computing, dbt transformations, Snowflake & BigQuery"},
+            {"title": "Data Engineer", "completed": ats_score >= 70, "desc": f"PySpark distributed computing, dbt transformations, Snowflake & BigQuery{f'. Learn: {ms_str}' if ms_str else ''}"},
             {"title": "Senior Data Engineer", "completed": False, "desc": "Delta Lake, Apache Iceberg, Kafka stream processing & Data Mesh design"},
             {"title": "Big Data & Cloud Architect", "completed": False, "desc": "Real-time streaming infrastructure, cloud data platform governance & SLA optimization"},
             {"title": "Head of Data Infrastructure / CDO", "completed": False, "desc": "Enterprise data strategy, executive leadership & organization data roadmap"}
         ]
     elif clean_domain in ('data_science_ml', 'data', 'ai', 'ml', 'data science', 'data_science'):
         return [
-            {"title": "Data & ML Foundations", "completed": True, "desc": "Python, SQL, statistics, data wrangling & exploratory analysis"},
-            {"title": "Data Scientist / ML Eng", "completed": True, "desc": "Production ML models, Scikit-Learn, PySpark ETL & statistical modeling"},
-            {"title": "Senior Data Scientist", "completed": ats_score >= 65, "desc": "Deep Learning models, PyTorch/TensorFlow, NLP & advanced analytics"},
-            {"title": "Lead Applied AI Scientist", "completed": False, "desc": "Enterprise AI architecture, multi-modal models & scalable ML serving"},
-            {"title": "Principal AI Architect", "completed": False, "desc": "Distributed training, foundation model design & AI governance"},
+            {"title": "Junior Data Analyst / Engineer", "completed": True, "desc": f"Python, SQL, Pandas, NumPy, data wrangling & exploratory analysis"},
+            {"title": "Data Scientist", "completed": True, "desc": f"Production ML models, Scikit-Learn, statistical modeling & feature engineering"},
+            {"title": "Senior Data Scientist", "completed": ats_score >= 70, "desc": f"Deep Learning with PyTorch/TensorFlow, NLP pipelines & advanced analytics{f'. Skill gaps: {ms_str}' if ms_str else ''}"},
+            {"title": "ML Engineer / Applied AI", "completed": False, "desc": "End-to-end ML systems, model serving (MLflow/BentoML), experiment tracking & CI/CD for ML"},
+            {"title": "ML / AI Architect", "completed": False, "desc": "Distributed training, foundation model design, scalable inference & AI governance"},
             {"title": "VP of AI & Data Science", "completed": False, "desc": "Strategic AI roadmap, enterprise AI strategy & department leadership"}
         ]
     elif clean_domain in ('backend_systems', 'backend'):
