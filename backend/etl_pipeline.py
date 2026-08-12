@@ -495,17 +495,19 @@ def standardize_skill_name(name: str) -> str:
         return name_clean.upper()
     return name_clean.title()
 
+# Batch size for bulk inserts
+BATCH_SIZE = 5000
 
 def _extract_skills_from_text(text):
     """
-    Extracts skills from free-text description using regex matching.
-    Returns a set of standardized skill names.
+    Fast skill extraction using single-pass token & string matching over lowercased description text.
     """
     found = set()
+    text_lower = text.lower()
     for skill_name, pattern in _SKILL_REGEXES:
-        if pattern.search(text):
-            standardized = standardize_skill_name(skill_name)
-            found.add(standardized)
+        if skill_name in text_lower:
+            if pattern.search(text_lower):
+                found.add(standardize_skill_name(skill_name))
     return found
 
 
@@ -572,25 +574,35 @@ def load_into_database(clean_rows):
     }
 
     try:
-        # Clear existing job data (ETL is idempotent)
-        print("  Clearing existing job_roles and skills...")
-        db.query(JobRole).delete()
-        db.query(Skill).delete()
+        # Preserve seeded default roles (id <= 7) while clearing non-seeded roles
+        print("  Clearing non-seeded job roles to ensure clean dataset ingestion...")
+        db.query(JobRole).filter(JobRole.id > 7).delete()
         db.commit()
 
+        # Seed canonical taxonomy skills
+        try:
+            from database.seed_taxonomy import seed_skill_taxonomy
+            seed_skill_taxonomy(db)
+        except Exception as st_err:
+            print(f"  Taxonomy seed note: {st_err}")
+
         # ---- 1. Extract and register all unique skills ----
-        print("  Registering skills...")
+        print("  Registering new dataset skills...")
         unique_skills_set = set()
         for row in clean_rows:
             unique_skills_set.update(row.get('skills_parsed', []))
 
-        skills_objects = []
-        for skill_name in sorted(unique_skills_set):
-            category = _categorize_skill(skill_name.lower())
-            skills_objects.append(Skill(name=skill_name, category=category))
+        existing_skills = set(s.name for s in db.query(Skill.name).all())
+        new_skills_set = sorted(list(unique_skills_set - existing_skills))
 
-        db.bulk_save_objects(skills_objects)
-        db.commit()
+        skills_objects = []
+        for skill_name in new_skills_set:
+            category = _categorize_skill(skill_name.lower())
+            skills_objects.append(Skill(name=skill_name, canonical_name=skill_name, category=category))
+
+        if skills_objects:
+            db.bulk_save_objects(skills_objects)
+            db.commit()
         load_stats['skills_registered'] = len(unique_skills_set)
 
         # ---- 2. Insert Job Roles ----

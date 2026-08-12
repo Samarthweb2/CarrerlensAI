@@ -42,6 +42,8 @@ data/reports/*
 
 # Processed data
 data/processed/*
+data/raw/*
+*.csv
 
 # Python cache
 .pytest_cache/

@@ -88,5 +88,8 @@ class Skill(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, index=True, nullable=False)
-    category = Column(String, nullable=True)  # Programming, Cloud, Data, etc.
+    canonical_name = Column(String, index=True, nullable=True)
+    aliases = Column(JSON, nullable=True)
+    category = Column(String, nullable=True)  # Programming, Cloud, Data, Framework, etc.
+    domain = Column(String, index=True, nullable=True)  # genai_agentic, data_engineering, backend_systems, etc.
 

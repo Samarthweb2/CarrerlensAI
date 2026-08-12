@@ -64,6 +64,18 @@ try:
         except Exception:
             pass
 
+    # Skills columns
+    for col_name, col_type in [
+        ("canonical_name", "TEXT"),
+        ("aliases", "JSON"),
+        ("domain", "TEXT")
+    ]:
+        try:
+            with engine.begin() as conn:
+                conn.execute(text(f"ALTER TABLE skills ADD COLUMN {col_name} {col_type}"))
+        except Exception:
+            pass
+
 except Exception as migration_err:
     print(f"Migration warning: {migration_err}")
 
@@ -176,6 +188,10 @@ try:
             db.add_all(default_roles)
             db.commit()
             print(f"Successfully seeded {len(default_roles)} default job roles in database.")
+        
+        # Seed Canonical Skill Taxonomy
+        from database.seed_taxonomy import seed_skill_taxonomy
+        seed_skill_taxonomy(db)
 except Exception as seed_err:
     print(f"Seeding warning: {seed_err}")
 

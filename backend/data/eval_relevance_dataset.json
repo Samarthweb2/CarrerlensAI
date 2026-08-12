@@ -1,0 +1,91 @@
+{
+  "description": "Ground-truth candidate-job relevance benchmark dataset across 10 representative candidate profiles.",
+  "relevance_scale": {
+    "3": "Highly Relevant (Exact Title & Domain Match)",
+    "2": "Relevant (Domain Match / Related Engineering Role)",
+    "1": "Weak Match (Partial Skill Overlap / Adjacent Field)",
+    "0": "Irrelevant (Domain Mismatch / Non-Engineering Role)"
+  },
+  "candidates": [
+    {
+      "id": "cand_01",
+      "name": "Priya Patel",
+      "target_domain": "frontend_ui",
+      "is_fresher": false,
+      "skills": ["React", "Next.js", "TypeScript", "JavaScript", "HTML5", "CSS3", "Tailwind CSS", "Redux"],
+      "text": "Senior Frontend Developer with 4 years experience building React, Next.js, and TypeScript web applications.",
+      "evaluated_jobs": [
+        {"title": "Senior ReactJS Developer", "company": "Tech Corp", "ground_truth_relevance": 3},
+        {"title": "Front End Engineer (React/TypeScript)", "company": "Avenu", "ground_truth_relevance": 3},
+        {"title": "Full Stack Web Developer (React + Node)", "company": "SaaS Inc", "ground_truth_relevance": 2},
+        {"title": "UI / UX Designer", "company": "Design Studio", "ground_truth_relevance": 0},
+        {"title": "Medical Claims Processor", "company": "Health Care", "ground_truth_relevance": 0},
+        {"title": "Backend Java Microservices Lead", "company": "Enterprise Bank", "ground_truth_relevance": 0}
+      ]
+    },
+    {
+      "id": "cand_02",
+      "name": "Aman Singh",
+      "target_domain": "genai_agentic",
+      "is_fresher": false,
+      "skills": ["LangChain", "LangGraph", "LlamaIndex", "RAG", "Agentic AI", "PyTorch", "Python", "LLMs"],
+      "text": "GenAI Scientist with 3 years building RAG pipelines, LangChain, PyTorch, and LlamaIndex agents.",
+      "evaluated_jobs": [
+        {"title": "Generative AI Engineer", "company": "Alaffia Health", "ground_truth_relevance": 3},
+        {"title": "Senior Machine Learning Research Engineer", "company": "Motion Recruitment", "ground_truth_relevance": 3},
+        {"title": "Applied AI Scientist", "company": "Deep Labs", "ground_truth_relevance": 3},
+        {"title": "Data Scientist (NLP & LLMs)", "company": "AI Core", "ground_truth_relevance": 2},
+        {"title": "Blockchain Security Researcher", "company": "Crypto Ltd", "ground_truth_relevance": 1},
+        {"title": "Frontend UI Developer", "company": "Web Agency", "ground_truth_relevance": 0}
+      ]
+    },
+    {
+      "id": "cand_03",
+      "name": "Rajesh Kumar",
+      "target_domain": "data_engineering",
+      "is_fresher": true,
+      "skills": ["PySpark", "SQL", "dbt", "Airflow", "Python", "ETL"],
+      "text": "Graduate Student Fresher looking for entry-level Data Engineering roles. Built PySpark ETL projects.",
+      "evaluated_jobs": [
+        {"title": "Junior Data Engineer", "company": "AtekIT", "ground_truth_relevance": 3},
+        {"title": "Entry Level ETL Developer", "company": "Data Solutions", "ground_truth_relevance": 3},
+        {"title": "Azure Data Engineer", "company": "Cloud Tech", "ground_truth_relevance": 2},
+        {"title": "Principal Data Architect / VP", "company": "Global Enterprise", "ground_truth_relevance": 0},
+        {"title": "Database Administrator (BOCA RATON)", "company": "DB Systems", "ground_truth_relevance": 1},
+        {"title": "QA Automation Lead", "company": "Testing Co", "ground_truth_relevance": 0}
+      ]
+    },
+    {
+      "id": "cand_04",
+      "name": "Vikram Verma",
+      "target_domain": "backend_systems",
+      "is_fresher": false,
+      "skills": ["FastAPI", "Node.js", "Python", "Express.js", "PostgreSQL", "Redis", "Docker", "REST API"],
+      "text": "Backend Developer with 5 years experience building FastAPI, Node.js microservices and PostgreSQL schemas.",
+      "evaluated_jobs": [
+        {"title": "Backend Engineer (FastAPI/Python)", "company": "Morgan King", "ground_truth_relevance": 3},
+        {"title": "Senior Node.js Backend Developer", "company": "API Systems", "ground_truth_relevance": 3},
+        {"title": "Fullstack Software Developer", "company": "Dev House", "ground_truth_relevance": 2},
+        {"title": "Building Engineer / Facilities", "company": "Real Estate Co", "ground_truth_relevance": 0},
+        {"title": "Network Engineer Senior", "company": "Telecom Inc", "ground_truth_relevance": 1},
+        {"title": "UI Designer", "company": "Creative Agency", "ground_truth_relevance": 0}
+      ]
+    },
+    {
+      "id": "cand_05",
+      "name": "Siddharth Mehta",
+      "target_domain": "devops_sre",
+      "is_fresher": false,
+      "skills": ["Docker", "Kubernetes", "Terraform", "AWS", "GCP", "CI/CD", "Prometheus", "Linux"],
+      "text": "DevOps Architect with 6 years experience in Kubernetes, Terraform, AWS, and Prometheus monitoring.",
+      "evaluated_jobs": [
+        {"title": "Cloud DevOps Engineer", "company": "TechSource", "ground_truth_relevance": 3},
+        {"title": "Site Reliability Engineer (SRE)", "company": "Robert Half", "ground_truth_relevance": 3},
+        {"title": "AWS Infrastructure Architect", "company": "Cloud Corp", "ground_truth_relevance": 3},
+        {"title": "Linux Systems Administrator", "company": "IT Operations", "ground_truth_relevance": 2},
+        {"title": "Embedded Firmware Developer", "company": "Hardware Inc", "ground_truth_relevance": 0},
+        {"title": "Marketing Operations Manager", "company": "Growth Agency", "ground_truth_relevance": 0}
+      ]
+    }
+  ]
+}

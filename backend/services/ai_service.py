@@ -57,7 +57,7 @@ def analyze_resume_text(
         )
 
     # 2. Compute baseline heuristics and structure
-    result = analyze_resume_with_heuristics(parsed_resume, target_jd)
+    result = analyze_resume_with_heuristics(parsed_resume, target_jd, missing_skills=missing_skills_from_db)
     if job_matches:
         result["jobMatches"] = job_matches
     if missing_skills_from_db:

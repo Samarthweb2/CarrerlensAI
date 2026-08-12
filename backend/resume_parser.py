@@ -92,40 +92,42 @@ def extract_links(text: str) -> Dict[str, Optional[str]]:
 
 def extract_skills_keywords(text: str) -> List[str]:
     """
-    Matches text against a comprehensive list of tech, data science, GenAI, and MLOps skills.
+    Matches text against database-driven taxonomy of 150+ canonical tech skills and alias maps.
     """
-    title_case_mapping = {
-        "python": "Python", "sql": "SQL", "power bi": "Power BI", "react": "React",
-        "fastapi": "FastAPI", "machine learning": "Machine Learning", "pandas": "Pandas",
-        "numpy": "NumPy", "docker": "Docker", "aws": "AWS", "kubernetes": "Kubernetes",
-        "ci/cd": "CI/CD", "javascript": "JavaScript", "html": "HTML", "css": "CSS",
-        "git": "Git", "java": "Java", "c++": "C++", "tableau": "Tableau", "excel": "Excel",
-        "spark": "Spark", "pyspark": "PySpark", "scikit-learn": "Scikit-Learn", "scikit learn": "Scikit-Learn",
-        "hadoop": "Hadoop", "nlp": "NLP", "deep learning": "Deep Learning", "pytorch": "PyTorch",
-        "tensorflow": "TensorFlow", "agile": "Agile", "scrum": "Scrum",
-        "rag": "RAG", "agentic ai": "Agentic AI", "llm": "LLMs", "llms": "LLMs",
-        "multi-agent": "Multi-Agent Systems", "multi-agent systems": "Multi-Agent Systems",
-        "langchain": "LangChain", "langgraph": "LangGraph", "llamaindex": "LlamaIndex",
-        "ragas": "RAGAS", "langsmith": "LangSmith", "bigquery": "BigQuery", "airflow": "Airflow",
-        "flask": "Flask", "rest apis": "REST APIs", "rest api": "REST API", "sqlite": "SQLite",
-        "data science": "Data Science", "data scientist": "Data Science", "data analysis": "Data Analysis",
-        "statistical modeling": "Statistical Modeling", "statistics": "Statistics",
-        "time series": "Time Series", "marketing mix modeling": "Marketing Mix Modeling",
-        "recommender systems": "Recommender Systems", "multimodal ai": "Multimodal AI",
-        "bayesian": "Bayesian Modeling", "azure ai studio": "Azure AI Studio",
-        "dbt": "dbt", "snowflake": "Snowflake", "redis": "Redis", "postgresql": "PostgreSQL",
-        "temporal": "Temporal", "transformers": "Transformers"
-    }
+    alias_map = {}
+    try:
+        from database.seed_taxonomy import SKILL_TAXONOMY
+        for item in SKILL_TAXONOMY:
+            canonical = item["canonical_name"]
+            alias_map[canonical.lower()] = canonical
+            for alias in item.get("aliases", []):
+                alias_map[alias.lower()] = canonical
+    except Exception:
+        pass
+
+    # Fallback default mapping
+    if not alias_map:
+        alias_map = {
+            "python": "Python", "sql": "SQL", "power bi": "Power BI", "react": "React",
+            "fastapi": "FastAPI", "machine learning": "Machine Learning", "pandas": "Pandas",
+            "numpy": "NumPy", "docker": "Docker", "aws": "AWS", "kubernetes": "Kubernetes",
+            "ci/cd": "CI/CD", "javascript": "JavaScript", "html": "HTML", "css": "CSS",
+            "git": "Git", "java": "Java", "c++": "C++", "tableau": "Tableau", "excel": "Excel",
+            "spark": "Spark", "pyspark": "PySpark", "scikit-learn": "Scikit-Learn",
+            "hadoop": "Hadoop", "nlp": "NLP", "deep learning": "Deep Learning", "pytorch": "PyTorch",
+            "tensorflow": "TensorFlow", "rag": "RAG", "agentic ai": "Agentic AI", "llm": "LLMs", "llms": "LLMs",
+            "multi-agent": "Multi-Agent Systems", "langchain": "LangChain", "langgraph": "LangGraph", "llamaindex": "LlamaIndex"
+        }
     
     extracted = []
     text_lower = text.lower()
-    for skill_key, display_name in title_case_mapping.items():
-        pattern = r'(?:\b|(?<=\W))' + re.escape(skill_key) + r'(?:\b|(?=\W))'
+    for alias_key, canonical_name in alias_map.items():
+        pattern = r'(?:\b|(?<=\W))' + re.escape(alias_key) + r'(?:\b|(?=\W))'
         if re.search(pattern, text_lower):
-            extracted.append(display_name)
+            if canonical_name not in extracted:
+                extracted.append(canonical_name)
             
-    # Deduplicate while preserving cased names
-    return list(dict.fromkeys(extracted))
+    return extracted
 
 def extract_section_content(text: str, section_name: str) -> List[str]:
     """

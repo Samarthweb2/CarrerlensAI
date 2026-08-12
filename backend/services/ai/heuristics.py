@@ -220,60 +220,131 @@ def generate_dynamic_interview_questions(skills: List[str], domain: str, parsed_
     
     return questions[:5]
 
-def generate_personalized_career_roadmap(parsed_resume: Dict[str, Any], domain: str, ats_score: int) -> List[Dict[str, Any]]:
+def generate_personalized_career_roadmap(
+    parsed_resume: Dict[str, Any], 
+    domain: str, 
+    ats_score: int,
+    missing_skills: Optional[List[str]] = None
+) -> List[Dict[str, Any]]:
     """
-    Generates a personalized, domain-specific 6-step career roadmap tailored to the
-    candidate's actual resume content (experience, titles, degree, and detected domain).
+    Generates a personalized, skill-gap-driven 6-step career roadmap tailored to the
+    candidate's actual resume content, detected domain, and market-frequency missing skills.
     """
-    exp = parsed_resume.get("experience", [])
-    skills = [s.lower() for s in parsed_resume.get("skills", [])]
-    text = parsed_resume.get("text", "").lower()
+    skills = [s.strip() for s in parsed_resume.get("skills", []) if isinstance(s, str)]
+    skills_str = ", ".join(skills[:3]) if skills else "core programming"
+    clean_domain = (domain or 'general').lower().replace('_', ' ').title()
     
-    is_senior = any(kw in text for kw in ["senior", "lead", "3+", "4+", "5+", "principal", "architect", "manager", "head"])
-    is_mid = any(kw in text for kw in ["2+", "3+", "data scientist", "engineer", "developer", "analyst"]) or len(exp) >= 2
+    # If explicit missing skills from market dataset exist, build a truly personalized roadmap
+    if missing_skills and len(missing_skills) >= 1:
+        ms1 = missing_skills[0]
+        ms2 = missing_skills[1] if len(missing_skills) > 1 else "Cloud Deployments"
+        ms3 = missing_skills[2] if len(missing_skills) > 2 else "System Architecture"
+        
+        return [
+            {
+                "title": f"{clean_domain} Foundations",
+                "completed": True,
+                "desc": f"Mastered baseline tech stack including {skills_str} and core version control."
+            },
+            {
+                "title": f"Applied {clean_domain} Developer",
+                "completed": True,
+                "desc": "Shipped production applications and implemented REST APIs/data models in enterprise environments."
+            },
+            {
+                "title": f"Market Priority Skill: {ms1}",
+                "completed": ats_score >= 80,
+                "desc": f"Acquire market-demanded skill '{ms1}' identified from dataset role analysis."
+            },
+            {
+                "title": f"Advanced Specialization: {ms2}",
+                "completed": False,
+                "desc": f"Master '{ms2}' to bridge candidate gap and meet top 10% market requirements."
+            },
+            {
+                "title": f"Enterprise Architecture & {ms3}",
+                "completed": False,
+                "desc": f"Architect end-to-end solutions incorporating '{ms3}' and scalable system design."
+            },
+            {
+                "title": f"Senior {clean_domain} Architect / Tech Lead",
+                "completed": False,
+                "desc": "Lead cross-functional engineering teams, drive technical strategy & platform vision."
+            }
+        ]
     
-    clean_domain = (domain or 'general').lower()
-    
-    if clean_domain in ('data', 'ai', 'ml', 'data science', 'data_science'):
-        if is_senior or any(kw in text for kw in ["data scientist", "rag", "agentic", "llm", "multi-agent", "pyspark", "pytorch"]):
-            return [
-                {"title": "Data & ML Foundations", "completed": True, "desc": "Python, SQL, statistics, data wrangling & exploratory analysis"},
-                {"title": "Data Scientist / ML Eng", "completed": True, "desc": "Production ML models, RAG pipelines, PySpark ETL & statistical modeling"},
-                {"title": "Senior Data Scientist", "completed": ats_score >= 65, "desc": "LLM fine-tuning, Agentic AI systems, LangChain/LangGraph & model evaluation"},
-                {"title": "Lead Applied AI Scientist", "completed": False, "desc": "Enterprise GenAI architecture, multi-modal AI models & scalable ML serving"},
-                {"title": "Principal AI Architect", "completed": False, "desc": "Distributed training, foundation model design & cross-functional AI governance"},
-                {"title": "VP of AI & Data Science", "completed": False, "desc": "Strategic AI roadmap, enterprise AI strategy & department leadership"}
-            ]
-        else:
-            return [
-                {"title": "Data Science Apprentice", "completed": True, "desc": "Foundational Python, SQL queries, Pandas & basic data visualization"},
-                {"title": "Junior Data Analyst", "completed": True, "desc": "SQL joins, Power BI/Tableau dashboards & basic statistical tests"},
-                {"title": "Data Analyst / ML Engineer", "completed": ats_score >= 70, "desc": "Predictive modeling, Scikit-learn, feature engineering & automated reporting"},
-                {"title": "Senior Data Scientist", "completed": False, "desc": "Deep Learning models, PyTorch/TensorFlow, NLP & advanced analytics"},
-                {"title": "GenAI / MLOps Architect", "completed": False, "desc": "RAG architecture, LLM orchestration, model monitoring & CI/CD pipelines"},
-                {"title": "Chief Data Officer", "completed": False, "desc": "Organization data strategy, AI transformation & executive leadership"}
-            ]
-            
-    elif clean_domain in ('backend', 'devops', 'backend_devops', 'cloud', 'infrastructure'):
+    if clean_domain in ('genai_agentic', 'genai', 'agentic'):
+        return [
+            {"title": "AI & Python Foundations", "completed": True, "desc": "Python, SQL, PyTorch basics, Git & API integrations"},
+            {"title": "Applied ML & Deep Learning Engineer", "completed": True, "desc": "Transformers, HuggingFace, Scikit-learn & model evaluation"},
+            {"title": "GenAI & RAG Specialist", "completed": ats_score >= 65, "desc": "RAG architectures, Vector DBs (Qdrant/Pinecone), LangChain & LlamaIndex"},
+            {"title": "Agentic Systems Architect", "completed": False, "desc": "LangGraph multi-agent orchestration, tool calling & evaluation benchmarks"},
+            {"title": "Senior LLMOps / AI Systems Lead", "completed": False, "desc": "Fine-tuning (LoRA/QLoRA), vLLM serving, quantization & distributed inference"},
+            {"title": "Principal AI Architect / VP of AI", "completed": False, "desc": "Enterprise GenAI governance, multi-modal AI models & strategic AI roadmap"}
+        ]
+    elif clean_domain in ('data_engineering', 'de', 'big_data'):
+        return [
+            {"title": "SQL & Python Data Foundations", "completed": True, "desc": "Advanced SQL queries, Python scripting, Relational DBs & Linux CLI"},
+            {"title": "Junior Data Engineer", "completed": True, "desc": "ETL scripting, Data Warehousing, Data Modeling & Airflow DAGs"},
+            {"title": "Data Engineer", "completed": ats_score >= 70, "desc": "PySpark distributed computing, dbt transformations, Snowflake & BigQuery"},
+            {"title": "Senior Data Engineer", "completed": False, "desc": "Delta Lake, Apache Iceberg, Kafka stream processing & Data Mesh design"},
+            {"title": "Big Data & Cloud Architect", "completed": False, "desc": "Real-time streaming infrastructure, cloud data platform governance & SLA optimization"},
+            {"title": "Head of Data Infrastructure / CDO", "completed": False, "desc": "Enterprise data strategy, executive leadership & organization data roadmap"}
+        ]
+    elif clean_domain in ('data_science_ml', 'data', 'ai', 'ml', 'data science', 'data_science'):
+        return [
+            {"title": "Data & ML Foundations", "completed": True, "desc": "Python, SQL, statistics, data wrangling & exploratory analysis"},
+            {"title": "Data Scientist / ML Eng", "completed": True, "desc": "Production ML models, Scikit-Learn, PySpark ETL & statistical modeling"},
+            {"title": "Senior Data Scientist", "completed": ats_score >= 65, "desc": "Deep Learning models, PyTorch/TensorFlow, NLP & advanced analytics"},
+            {"title": "Lead Applied AI Scientist", "completed": False, "desc": "Enterprise AI architecture, multi-modal models & scalable ML serving"},
+            {"title": "Principal AI Architect", "completed": False, "desc": "Distributed training, foundation model design & AI governance"},
+            {"title": "VP of AI & Data Science", "completed": False, "desc": "Strategic AI roadmap, enterprise AI strategy & department leadership"}
+        ]
+    elif clean_domain in ('backend_systems', 'backend'):
         return [
             {"title": "Backend Foundations", "completed": True, "desc": "CLI automation, Python/Node/Java basics, HTTP APIs & SQL databases"},
             {"title": "Junior Backend Dev", "completed": True, "desc": "REST API development, database indexing, Git operations & Docker containers"},
             {"title": "Backend Engineer", "completed": ats_score >= 70, "desc": "FastAPI/Express microservices, Redis caching, ORMs & auth systems"},
-            {"title": "Senior Backend Engineer", "completed": False, "desc": "Distributed systems, message queues (Kafka/RabbitMQ) & API gateways"},
+            {"title": "Senior Backend Engineer", "completed": False, "desc": "Distributed systems, message queues (Kafka/RabbitMQ) & gRPC gateways"},
             {"title": "Cloud & Systems Architect", "completed": False, "desc": "Kubernetes clusters, CI/CD automation pipelines & AWS/GCP cloud scaling"},
             {"title": "VP of Technology / CTO", "completed": False, "desc": "Strategic technology stack, infrastructure security & department vision"}
         ]
-        
-    elif clean_domain in ('frontend', 'ui', 'mobile'):
+    elif clean_domain in ('frontend_ui', 'frontend', 'ui'):
         return [
             {"title": "Web Foundations", "completed": True, "desc": "HTML5, CSS3, JavaScript ES6+ & responsive UI layouts"},
             {"title": "Junior Frontend Dev", "completed": True, "desc": "Modern JS/TS, React/Vue components & SPA state management"},
-            {"title": "Frontend Engineer", "completed": ats_score >= 70, "desc": "React/Next.js development, Redux/Zustand state stores & UI frameworks"},
+            {"title": "Frontend Engineer", "completed": ats_score >= 70, "desc": "React/Next.js development, Redux/Zustand state stores & Tailwind CSS"},
             {"title": "Senior Frontend Engineer", "completed": False, "desc": "Web performance optimization, SSR/SSG caching & security standards"},
             {"title": "Frontend Architect", "completed": False, "desc": "Design systems creation, micro-frontends architecture & build tooling"},
             {"title": "VP of Engineering", "completed": False, "desc": "Department alignment, engineering hiring & technical roadmap"}
         ]
-        
+    elif clean_domain in ('fullstack', 'full_stack'):
+        return [
+            {"title": "Web & Database Foundations", "completed": True, "desc": "HTML/CSS, JavaScript, SQL databases & Git version control"},
+            {"title": "Junior Full-Stack Dev", "completed": True, "desc": "React UI components, Node/Python REST APIs & CRUD database operations"},
+            {"title": "Full-Stack Engineer", "completed": ats_score >= 70, "desc": "Next.js/React frontend + FastAPI/Node backend + PostgreSQL & Docker"},
+            {"title": "Senior Full-Stack Architect", "completed": False, "desc": "End-to-end system design, microservices, Caching & Cloud deployments"},
+            {"title": "Staff Software Engineer", "completed": False, "desc": "High-scale architecture, cross-team technical leadership & security standards"},
+            {"title": "VP of Product Engineering / CTO", "completed": False, "desc": "Product tech roadmap, engineering org leadership & executive alignment"}
+        ]
+    elif clean_domain in ('devops_sre', 'devops', 'sre', 'cloud'):
+        return [
+            {"title": "Systems & Scripting Foundations", "completed": True, "desc": "Linux CLI, Bash/Python scripting, TCP/IP networking & Git"},
+            {"title": "Junior DevOps Engineer", "completed": True, "desc": "Docker containerization, CI/CD pipeline automation & cloud CLI tools"},
+            {"title": "DevOps / SRE Engineer", "completed": ats_score >= 70, "desc": "Kubernetes cluster management, Terraform IaC, AWS/GCP & Helm charts"},
+            {"title": "Senior Cloud / SRE Architect", "completed": False, "desc": "Prometheus/Grafana observability, zero-downtime deployments & SLOs"},
+            {"title": "Head of Infrastructure & Reliability", "completed": False, "desc": "Multi-region cloud infrastructure, disaster recovery & security compliance"},
+            {"title": "VP of Infrastructure / CTO", "completed": False, "desc": "Infrastructure cost optimization, organization DevOps strategy & leadership"}
+        ]
+    elif clean_domain in ('mobile_dev', 'mobile'):
+        return [
+            {"title": "Mobile Programming Foundations", "completed": True, "desc": "Dart/JavaScript/Swift basics, OOP & mobile UI concepts"},
+            {"title": "Junior Mobile Developer", "completed": True, "desc": "Flutter/React Native layouts, REST API consumption & mobile state management"},
+            {"title": "Mobile Engineer", "completed": ats_score >= 70, "desc": "Cross-platform mobile apps, native modules, offline storage & CI/CD publishing"},
+            {"title": "Senior Mobile Architect", "completed": False, "desc": "Mobile app security, performance tuning, native iOS/Android optimizations"},
+            {"title": "Lead Mobile Architect", "completed": False, "desc": "Design systems for mobile, SDK architecture & app store deployment pipelines"},
+            {"title": "VP of Mobile Engineering", "completed": False, "desc": "Mobile product strategy, engineering team growth & platform technical vision"}
+        ]
     elif clean_domain in ('cybersecurity', 'security'):
         return [
             {"title": "Security Foundations", "completed": True, "desc": "Networking fundamentals, Linux CLI, TCP/IP & OS security"},
@@ -283,7 +354,24 @@ def generate_personalized_career_roadmap(parsed_resume: Dict[str, Any], domain: 
             {"title": "Head of Information Security", "completed": False, "desc": "Security risk governance, incident response leadership & team management"},
             {"title": "Chief Information Security Officer (CISO)", "completed": False, "desc": "Executive security strategy, enterprise threat defense & regulatory oversight"}
         ]
-        
+    elif clean_domain in ('embedded_iot', 'embedded', 'iot'):
+        return [
+            {"title": "Hardware & C Foundations", "completed": True, "desc": "C/C++ programming, digital logic, data structures & electronics basics"},
+            {"title": "Junior Embedded Engineer", "completed": True, "desc": "Microcontroller programming (STM32/ESP32), GPIO, UART/SPI/I2C protocols"},
+            {"title": "Embedded Systems Engineer", "completed": ats_score >= 70, "desc": "FreeRTOS multitasking, device driver development & hardware debugging"},
+            {"title": "Senior Embedded Architect", "completed": False, "desc": "Linux Kernel driver development, IoT security protocols (MQTT/TLS) & power tuning"},
+            {"title": "Principal Firmware Architect", "completed": False, "desc": "System-on-Chip (SoC) architecture, hardware-software co-design & Board bring-up"},
+            {"title": "VP of Embedded Systems", "completed": False, "desc": "Hardware product roadmap, manufacturing alignment & department leadership"}
+        ]
+    elif clean_domain in ('qa_automation', 'qa', 'testing'):
+        return [
+            {"title": "Testing Foundations", "completed": True, "desc": "Software QA fundamentals, test planning, manual testing & bug tracking"},
+            {"title": "Junior Automation Engineer", "completed": True, "desc": "Python/JS test scripting, Selenium/Playwright basics & API testing (Postman)"},
+            {"title": "QA Automation Engineer", "completed": ats_score >= 70, "desc": "Cypress/Playwright E2E frameworks, PyTest automation & CI pipeline integration"},
+            {"title": "Senior Test Architect", "completed": False, "desc": "Performance & load testing (JMeter), visual regression & test infrastructure"},
+            {"title": "Head of Quality Engineering", "completed": False, "desc": "Organization quality governance, automation strategy & release management"},
+            {"title": "VP of Quality Assurance", "completed": False, "desc": "Executive QA strategy, continuous deployment quality & department leadership"}
+        ]
     else:
         return [
             {"title": "Software Foundations", "completed": True, "desc": "Programming logic, data structures, algorithms & version control"},
@@ -294,7 +382,7 @@ def generate_personalized_career_roadmap(parsed_resume: Dict[str, Any], domain: 
             {"title": "CTO / Director of Eng", "completed": False, "desc": "Strategic technology roadmap, engineering organization & tech leadership"}
         ]
 
-def analyze_resume_with_heuristics(parsed_resume: Dict[str, Any], job_description: Optional[str] = None) -> Dict[str, Any]:
+def analyze_resume_with_heuristics(parsed_resume: Dict[str, Any], job_description: Optional[str] = None, missing_skills: Optional[List[str]] = None) -> Dict[str, Any]:
     """
     Local dynamic analysis logic that computes resume metrics from the actual parsed resume data.
     """
@@ -371,24 +459,55 @@ def analyze_resume_with_heuristics(parsed_resume: Dict[str, Any], job_descriptio
         suggestions.extend(domain_tips.get(domain, domain_tips['general']))
 
     domain_job_templates = {
-        'frontend': [
-            {"company": "Google", "role": "Frontend Developer", "salary": "₹18–24 LPA", "location": "Bangalore", "logo": "G", "color": "#4285F4", "req_skills": {"react", "javascript", "html", "css", "typescript"}},
-            {"company": "Vercel", "role": "React Engineer", "salary": "₹22–28 LPA", "location": "Remote", "logo": "V", "color": "#000000", "req_skills": {"react", "next.js", "typescript", "css", "javascript"}},
-            {"company": "Meta", "role": "UI Engineer", "salary": "₹20–26 LPA", "location": "Hyderabad", "logo": "M", "color": "#1877F2", "req_skills": {"react", "javascript", "css", "html", "graphql"}},
-            {"company": "Flipkart", "role": "Frontend Engineer", "salary": "₹16–22 LPA", "location": "Bangalore", "logo": "F", "color": "#2874F0", "req_skills": {"react", "javascript", "html", "css", "redux"}},
-        ],
-        'backend_devops': [
-            {"company": "AWS", "role": "Backend Cloud Engineer", "salary": "₹20–26 LPA", "location": "Bangalore", "logo": "A", "color": "#FF9900", "req_skills": {"python", "aws", "docker", "sql", "linux"}},
-            {"company": "Stripe", "role": "API Integration Engineer", "salary": "₹24–30 LPA", "location": "Bangalore", "logo": "S", "color": "#635BFF", "req_skills": {"python", "fastapi", "sql", "docker", "redis"}},
-            {"company": "Microsoft", "role": "DevOps Engineer I", "salary": "₹20–26 LPA", "location": "Hyderabad", "logo": "M", "color": "#F25022", "req_skills": {"docker", "kubernetes", "ci/cd", "aws", "terraform"}},
-            {"company": "Razorpay", "role": "Backend Engineer", "salary": "₹18–24 LPA", "location": "Bangalore", "logo": "R", "color": "#3395FF", "req_skills": {"python", "node.js", "sql", "docker", "redis"}},
-        ],
-        'data': [
+        'genai_agentic': [
             {"company": "Tiger Analytics", "role": "Senior Data Scientist (GenAI & RAG)", "salary": "₹22–32 LPA", "location": "Bangalore", "logo": "T", "color": "#00A88F", "req_skills": {"python", "sql", "pytorch", "rag", "agentic ai", "llms", "pyspark", "deep learning", "machine learning"}},
+            {"company": "Microsoft", "role": "GenAI Systems Architect", "salary": "₹28–38 LPA", "location": "Hyderabad", "logo": "M", "color": "#F25022", "req_skills": {"python", "sql", "llms", "langchain", "langgraph", "llamaindex", "vector databases"}},
+            {"company": "Amazon", "role": "Applied AI Scientist (LLMs)", "salary": "₹30–42 LPA", "location": "Chennai", "logo": "A", "color": "#FF9900", "req_skills": {"python", "nlp", "deep learning", "pytorch", "transformers", "fine-tuning"}},
+            {"company": "Google", "role": "Staff GenAI & Agentic AI Eng", "salary": "₹32–45 LPA", "location": "Bangalore", "logo": "G", "color": "#4285F4", "req_skills": {"python", "langchain", "multi-agent systems", "rag", "pytorch"}},
+        ],
+        'data_science_ml': [
             {"company": "Google", "role": "Staff Data Scientist / ML Engineer", "salary": "₹28–38 LPA", "location": "Bangalore", "logo": "G", "color": "#4285F4", "req_skills": {"python", "sql", "tensorflow", "pytorch", "scikit-learn", "statistics", "machine learning"}},
-            {"company": "Microsoft", "role": "GenAI Systems Engineer", "salary": "₹25–35 LPA", "location": "Hyderabad", "logo": "M", "color": "#F25022", "req_skills": {"python", "sql", "spark", "aws", "airflow", "llms", "langchain"}},
-            {"company": "Amazon", "role": "Senior Applied Scientist (NLP & LLMs)", "salary": "₹30–42 LPA", "location": "Chennai", "logo": "A", "color": "#FF9900", "req_skills": {"python", "sql", "nlp", "deep learning", "pytorch", "transformers"}},
             {"company": "Swiggy", "role": "Lead Data Scientist", "salary": "₹24–34 LPA", "location": "Bangalore", "logo": "S", "color": "#FC8019", "req_skills": {"python", "sql", "pandas", "scikit-learn", "machine learning", "analytics"}},
+            {"company": "Fractal Analytics", "role": "Senior ML Engineer", "salary": "₹20–28 LPA", "location": "Mumbai", "logo": "F", "color": "#004B87", "req_skills": {"python", "sql", "scikit-learn", "numpy", "pandas", "statistical modeling"}},
+        ],
+        'data_engineering': [
+            {"company": "Databricks", "role": "Senior Data Engineer", "salary": "₹26–36 LPA", "location": "Bangalore", "logo": "D", "color": "#FF3621", "req_skills": {"pyspark", "sql", "dbt", "airflow", "snowflake", "delta lake"}},
+            {"company": "Uber", "role": "Big Data Infrastructure Eng", "salary": "₹28–38 LPA", "location": "Bangalore", "logo": "U", "color": "#000000", "req_skills": {"pyspark", "kafka", "apache iceberg", "sql", "python"}},
+            {"company": "Snowflake", "role": "Data Platform Engineer", "salary": "₹24–32 LPA", "location": "Remote", "logo": "S", "color": "#29B5E8", "req_skills": {"sql", "snowflake", "bigquery", "airflow", "python"}},
+        ],
+        'backend_systems': [
+            {"company": "Stripe", "role": "API Integration Engineer", "salary": "₹24–30 LPA", "location": "Bangalore", "logo": "S", "color": "#635BFF", "req_skills": {"python", "fastapi", "sql", "docker", "redis"}},
+            {"company": "Razorpay", "role": "Backend Systems Engineer", "salary": "₹18–24 LPA", "location": "Bangalore", "logo": "R", "color": "#3395FF", "req_skills": {"python", "node.js", "postgresql", "docker", "redis", "grpc"}},
+            {"company": "AWS", "role": "Backend Cloud Engineer", "salary": "₹20–26 LPA", "location": "Bangalore", "logo": "A", "color": "#FF9900", "req_skills": {"python", "java", "fastapi", "postgresql", "redis"}},
+        ],
+        'frontend_ui': [
+            {"company": "Google", "role": "Frontend Developer", "salary": "₹18–24 LPA", "location": "Bangalore", "logo": "G", "color": "#4285F4", "req_skills": {"react", "javascript", "html5", "css3", "typescript"}},
+            {"company": "Vercel", "role": "React UI Engineer", "salary": "₹22–28 LPA", "location": "Remote", "logo": "V", "color": "#000000", "req_skills": {"react", "next.js", "typescript", "tailwind css", "javascript"}},
+            {"company": "Flipkart", "role": "Frontend Architect", "salary": "₹20–28 LPA", "location": "Bangalore", "logo": "F", "color": "#2874F0", "req_skills": {"react", "javascript", "html5", "css3", "redux"}},
+        ],
+        'fullstack': [
+            {"company": "Atlassian", "role": "Full-Stack Engineer", "salary": "₹22–30 LPA", "location": "Bengaluru", "logo": "A", "color": "#0052CC", "req_skills": {"react", "node.js", "typescript", "postgresql", "docker"}},
+            {"company": "Postman", "role": "Senior Full-Stack Developer", "salary": "₹24–32 LPA", "location": "Remote", "logo": "P", "color": "#FF6C37", "req_skills": {"next.js", "fastapi", "postgresql", "docker", "typescript"}},
+        ],
+        'devops_sre': [
+            {"company": "Microsoft", "role": "DevOps SRE Engineer", "salary": "₹20–26 LPA", "location": "Hyderabad", "logo": "M", "color": "#F25022", "req_skills": {"docker", "kubernetes", "ci/cd", "aws", "terraform"}},
+            {"company": "AWS", "role": "Cloud Infrastructure Architect", "salary": "₹26–36 LPA", "location": "Bangalore", "logo": "A", "color": "#FF9900", "req_skills": {"aws", "kubernetes", "terraform", "prometheus", "linux"}},
+        ],
+        'mobile_dev': [
+            {"company": "Uber", "role": "Senior Mobile Engineer", "salary": "₹24–32 LPA", "location": "Bangalore", "logo": "U", "color": "#000000", "req_skills": {"flutter", "react native", "swift", "kotlin"}},
+            {"company": "Zomato", "role": "Mobile App Developer", "salary": "₹18–24 LPA", "location": "Gurugram", "logo": "Z", "color": "#CB202D", "req_skills": {"react native", "kotlin", "swift"}},
+        ],
+        'cybersecurity': [
+            {"company": "Palo Alto Networks", "role": "Cybersecurity Specialist", "salary": "₹22–30 LPA", "location": "Bangalore", "logo": "P", "color": "#FA582D", "req_skills": {"penetration testing", "siem", "threat modeling", "cryptography"}},
+            {"company": "CrowdStrike", "role": "Security Operations Engineer", "salary": "₹20–28 LPA", "location": "Pune", "logo": "C", "color": "#FF0000", "req_skills": {"siem", "penetration testing", "cryptography"}},
+        ],
+        'embedded_iot': [
+            {"company": "Qualcomm", "role": "Embedded Firmware Engineer", "salary": "₹20–28 LPA", "location": "Hyderabad", "logo": "Q", "color": "#3253DC", "req_skills": {"c", "c++", "rtos", "microcontrollers", "stm32"}},
+            {"company": "Bosch", "role": "IoT & Systems Architect", "salary": "₹18–26 LPA", "location": "Bangalore", "logo": "B", "color": "#EA1D25", "req_skills": {"c++", "rtos", "esp32", "microcontrollers"}},
+        ],
+        'qa_automation': [
+            {"company": "Thoughtworks", "role": "QA Automation Lead", "salary": "₹18–25 LPA", "location": "Bangalore", "logo": "T", "color": "#F37A20", "req_skills": {"cypress", "playwright", "selenium", "pytest"}},
+            {"company": "BrowserStack", "role": "SDET / Automation Engineer", "salary": "₹20–28 LPA", "location": "Mumbai", "logo": "B", "color": "#1976D2", "req_skills": {"playwright", "selenium", "postman", "pytest"}},
         ],
         'general': [
             {"company": "Google", "role": "Software Engineer I", "salary": "₹18–25 LPA", "location": "Bangalore", "logo": "G", "color": "#4285F4", "req_skills": {"python", "java", "sql", "git", "algorithms"}},
@@ -419,7 +538,7 @@ def analyze_resume_with_heuristics(parsed_resume: Dict[str, Any], job_descriptio
     job_matches.sort(key=lambda x: x["match"], reverse=True)
     improvements = generate_dynamic_improvements(parsed_resume, domain)
     interview_questions = generate_dynamic_interview_questions(skills, domain, parsed_resume)
-    roadmap = generate_personalized_career_roadmap(parsed_resume, domain, ats_score)
+    roadmap = generate_personalized_career_roadmap(parsed_resume, domain, ats_score, missing_skills=missing_skills)
 
     return {
         "atsScore": ats_score,
