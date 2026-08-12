@@ -249,19 +249,31 @@ CareerLensAI/
 │   │       └── resume.py             # Resume upload, parse, and analyze routes
 │   ├── database/
 │   │   ├── database.py               # PostgreSQL/SQLite connection & session factory
-│   │   └── models.py                 # SQLAlchemy ORM models (User, Resume, Analysis, JobRole, Skill)
+│   │   ├── models.py                 # SQLAlchemy ORM models (User, Resume, Analysis, JobRole, Skill)
+│   │   └── seed_taxonomy.py          # Skill taxonomy database seeding script
 │   ├── schemas/
 │   │   ├── auth.py                   # Pydantic schemas for auth requests
 │   │   └── resume.py                 # Pydantic schemas for analysis responses
+│   ├── scripts/
+│   │   ├── audit_false_positives.py  # Precision & recall false-positive auditor
+│   │   └── test_10_real_resumes.py   # Multi-persona production resume test script
 │   ├── services/
-│   │   ├── ai_service.py             # Domain detection, set-based Jaccard search, Gemini enhancement
+│   │   ├── ai/
+│   │   │   ├── heuristics.py         # Rule-based metrics & 6-step roadmap generator
+│   │   │   ├── job_matching.py       # Engine v2 feature scoring & 30+ domain classification
+│   │   │   ├── prompt_builder.py     # Gemini prompt templates for bullet rewrites
+│   │   │   ├── response_parser.py    # Structured JSON response parser for Gemini AI
+│   │   │   └── roadmap_sh_taxonomy.py# Central registry for 30+ roadmap.sh tech & non-tech roadmaps
+│   │   ├── ml/
+│   │   │   └── ranker.py             # ML feature extractor & candidate ranking model
+│   │   ├── ai_service.py             # Facade for AI analysis, DB job search, and Gemini enhancement
 │   │   ├── auth_service.py           # User creation, password verification, OTP lifecycle
 │   │   └── jobs_service.py           # Job role search & database retrieval
 │   ├── utils/
 │   │   ├── jwt_handler.py            # Token generation & verification
 │   │   └── password.py               # Bcrypt password hashing functions
 │   ├── bulk_parser.py                # Batch resume parsing runner
-│   ├── etl_pipeline.py               # 6-stage ETL pipeline for LinkedIn dataset
+│   ├── etl_pipeline.py               # 6-stage ETL pipeline for 115k LinkedIn dataset
 │   ├── main.py                       # FastAPI application entry point & CORS configuration
 │   └── resume_parser.py              # PDF/DOCX extraction & JSON section parser
 ├── frontend/
@@ -270,7 +282,7 @@ CareerLensAI/
 │   │   ├── components/
 │   │   │   ├── auth/                 # Login, Signup, OTP UI components
 │   │   │   ├── common/               # Navbar, Footer, Loading Spiders
-│   │   │   ├── dashboard/            # ATS Score Card, Job Recs, Skill Gap components
+│   │   │   ├── dashboard/            # ATS Score Card, Job Recs, Skill Gap, Career Roadmap
 │   │   │   └── landing/              # Hero, Features, Metrics components
 │   │   ├── pages/                    # Main app page routes
 │   │   ├── services/
@@ -291,6 +303,7 @@ CareerLensAI/
 │   └── screenshots/                  # High-quality application screenshots
 ├── .gitignore                        # Git exclusion rules
 ├── LICENSE                           # Software license
+├── render.yaml                       # Render infrastructure blueprint
 └── README.md                         # Documentation (this file)
 ```
 
