@@ -58,6 +58,9 @@ class Analysis(Base):
     interview_questions = Column(JSON, nullable=True)
     parsed_resume = Column(JSON, nullable=True)
     
+    share_token = Column(String, unique=True, index=True, nullable=True)
+    is_public = Column(Boolean, default=False)
+
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     user = relationship("User", back_populates="analyses")

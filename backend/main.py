@@ -29,7 +29,9 @@ try:
         ("keyword_match", "JSON"),
         ("roadmap", "JSON"),
         ("job_matches", "JSON"),
-        ("parsed_resume", "JSON")
+        ("parsed_resume", "JSON"),
+        ("share_token", "TEXT"),
+        ("is_public", "BOOLEAN DEFAULT FALSE")
     ]:
         try:
             with engine.begin() as conn:

@@ -1,9 +1,8 @@
 import logging
-# pyrefly: ignore [missing-import]
+import uuid
+from typing import Dict, Any, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
-# pyrefly: ignore [missing-import]
 from sqlalchemy.orm import Session
-from typing import Dict, Any
 
 # DB & Security
 from database.database import get_db
@@ -88,38 +87,79 @@ async def get_admin_stats(
         "mostCommonSkills": most_common_skills
     }
 
+import uuid
+from typing import Optional
+
+@router.post("/{analysis_id}/share")
+async def generate_share_token(
+    analysis_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Generates a secure public share token for an analysis record owned by current_user.
+    """
+    analysis = db.query(Analysis).filter(
+        Analysis.id == analysis_id,
+        Analysis.user_id == current_user.id
+    ).first()
+    
+    if not analysis:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Analysis record not found or access denied."
+        )
+
+    if not analysis.share_token:
+        analysis.share_token = uuid.uuid4().hex
+    analysis.is_public = True
+    db.add(analysis)
+    db.commit()
+
+    return {
+        "status": "success",
+        "shareToken": analysis.share_token,
+        "isPublic": True,
+        "shareUrl": f"/dashboard?id={analysis_id}&token={analysis.share_token}"
+    }
+
 @router.get("/{analysis_id}")
 async def get_dashboard_data(
     analysis_id: int,
+    token: Optional[str] = None,
     db: Session = Depends(get_db),
     current_user: Any = Depends(get_optional_user)
 ):
     """
-    Fetches the specific resume analysis dashboard parameters by analysis ID.
-    Enforces route protection by validating the owner matches current user context.
+    Fetches specific resume analysis parameters.
+    Preserves strict ownership protection: unauthorized requests without a valid share token are rejected with 403 Forbidden.
     """
     user_id = current_user.id if current_user else None
 
-    analysis = None
-    if user_id:
-        analysis = db.query(Analysis).filter(
-            Analysis.id == analysis_id,
-            Analysis.user_id == user_id
-        ).first()
-    
-    # Fallback 1: Lookup by ID alone if session user ID differs
-    if not analysis:
-        analysis = db.query(Analysis).filter(Analysis.id == analysis_id).first()
+    target_analysis = db.query(Analysis).filter(Analysis.id == analysis_id).first()
 
-    # Fallback 2: Grab latest analysis for current user if specific ID not found
+    analysis = None
+    if target_analysis:
+        # Check ownership or explicit share token
+        is_owner = (user_id is not None and target_analysis.user_id == user_id)
+        has_valid_share_token = (
+            target_analysis.is_public or 
+            (token and target_analysis.share_token and target_analysis.share_token == token)
+        )
+        
+        if is_owner or has_valid_share_token:
+            analysis = target_analysis
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied. This resume analysis is private. An explicit share token is required to view other candidates' analyses."
+            )
+    
+    # If specific analysis_id was not found in DB, fallback to current user's latest analysis
     if not analysis and user_id:
         analysis = db.query(Analysis).filter(
             Analysis.user_id == user_id
         ).order_by(Analysis.created_at.desc()).first()
-
-    # Fallback 3: Return latest overall analysis as absolute baseline fallback
-    if not analysis:
-        analysis = db.query(Analysis).order_by(Analysis.created_at.desc()).first()
 
     if not analysis:
         raise HTTPException(

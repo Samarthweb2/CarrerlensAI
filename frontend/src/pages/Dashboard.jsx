@@ -9,20 +9,23 @@ export default function Dashboard({ onNavigate }) {
 
   const queryParams = new URLSearchParams(window.location.search);
   const analysisId = queryParams.get('id');
+  const shareToken = queryParams.get('token');
 
   const fetchDashboard = async () => {
     setLoading(true);
     setError(null);
     try {
       if (analysisId) {
-        const result = await dashboardService.getDashboardData(analysisId);
+        const result = await dashboardService.getDashboardData(analysisId, shareToken);
         setData(result);
       } else {
         setError("No active resume analysis ID was specified in the URL. Please upload a resume first.");
       }
     } catch (err) {
       console.error(err);
-      if (err.response?.status === 401) {
+      if (err.response?.status === 403) {
+        setError(err.response?.data?.detail || "Access denied. This resume analysis is private. An explicit share token is required.");
+      } else if (err.response?.status === 401) {
         setError("Session expired or user context missing. Please log in to access your dashboard.");
       } else {
         setError(err.response?.data?.detail || "Failed to load dashboard data. Ensure the FastAPI backend is running.");
